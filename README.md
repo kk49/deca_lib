@@ -9,6 +9,23 @@ so that it can be used by multiple projects.
 * Other languages via WebAssembly? C#?
 
 # Requires
-* CMake
+* CMake 3.16+
 * emscripten
-* Python 3.7 (for WASM interface generation, and test code)
+* Python 3.7+ (for WASM interface generation, and test code)
+
+# Build instructions
+Activate emscripten environment, something like...
+
+```
+source ~/prj/emsdk/emsdk_env.sh
+```
+
+Then build deca_lib
+
+```
+cd deca_lib
+mkdir -p build/emscripten
+cd build/emscripten
+cmake -DCMAKE_TOOLCHAIN_FILE=${EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake ../../
+make
+```
