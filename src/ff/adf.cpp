@@ -542,6 +542,7 @@ bool read_file(AdfContainer & adf, DecaBufferFile & f)
         StringRef const s{f.read_strz()};
         u64 const h = f.read<u64>();
         adf.map_string_hash_[h] = s;
+        hash_register(h, s);
     }
 
     // typedef
