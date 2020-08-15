@@ -1,8 +1,8 @@
 import time
 import pprint
-from deca_adf_lib import DecaAdfWasm
+from deca_adf_lib import DecaLibWasm, DecaLibWasmStack
 
-lib = DecaAdfWasm()
+lib = DecaLibWasmStack()
 
 print(f'wasm memory size = {len(memoryview(lib.instance().memory.buffer))}')
 
@@ -36,6 +36,9 @@ for skip_bytes, fn in test_files:
 
     # pprint.pprint(lib.adf_stack)
 
-    adf = lib.adf_stack.pop()
+    if lib.adf_stack:
+        adf = lib.adf_stack.pop()
+    else:
+        adf = None
 
     print(f'{fn}, value = {value}, Time: {t3-t0} = {t1-t0} + {t2-t1} + {t3-t2}')

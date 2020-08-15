@@ -10,8 +10,8 @@ class DecaAdfEnumValue:
         self.value_str = value_str
 
 
-class DecaAdfWasm:
-    def __init__(self):
+class DecaLibWasm:
+    def __init__(self, *args, **kwargs):
         lib_env = {
             'db_print': self.db_print,
             'db_warn': self.db_warn,
@@ -76,6 +76,115 @@ class DecaAdfWasm:
 
         self._instance = wasmer.Instance(wasm_bytes, import_object)
 
+    def instance(self):
+        return self._instance
+
+    def db_print(self, offset, sz):
+        pass
+
+    def db_warn(self, offset, sz):
+        pass
+
+    def db_error(self, offset, sz):
+        pass
+
+    def dict_push(self):
+        pass
+
+    def dict_field_set(self):
+        pass
+
+    def list_push(self):
+        pass
+
+    def list_append(self):
+        pass
+
+    def hash_register(self, hash, offset, sz):
+        pass
+
+    def hash32_push(self, value):
+        pass
+
+    def hash48_push(self, value):
+        pass
+
+    def hash64_push(self, value):
+        pass
+
+    def bool_push(self, value):
+        pass
+
+    def s8_push(self, value):
+        pass
+
+    def u8_push(self, value):
+        pass
+
+    def s16_push(self, value):
+        pass
+
+    def u16_push(self, value):
+        pass
+
+    def s32_push(self, value):
+        pass
+
+    def u32_push(self, value):
+        pass
+
+    def s64_push(self, value):
+        pass
+
+    def u64_push(self, value):
+        pass
+
+    def f32_push(self, value):
+        pass
+
+    def f64_push(self, value):
+        pass
+
+    def str_push(self, offset, sz):
+        pass
+
+    def enum_push(self, value, offset, sz):
+        pass
+
+    def s8s_push(self, offset, cnt):
+        pass
+
+    def u8s_push(self, offset, cnt):
+        pass
+
+    def s16s_push(self, offset, cnt):
+        pass
+
+    def u16s_push(self, offset, cnt):
+        pass
+
+    def s32s_push(self, offset, cnt):
+        pass
+
+    def u32s_push(self, offset, cnt):
+        pass
+
+    def s64s_push(self, offset, cnt):
+        pass
+
+    def u64s_push(self, offset, cnt):
+        pass
+
+    def f32s_push(self, offset, cnt):
+        pass
+
+    def f64s_push(self, offset, cnt):
+        pass
+
+
+class DecaLibWasmStack(DecaLibWasm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.adf_stack = []
 
     def instance(self):
@@ -99,22 +208,18 @@ class DecaAdfWasm:
 
     def dict_push(self):
         self.adf_stack.append({})
-        # print('dict_push')
 
     def dict_field_set(self):
         self.adf_stack[-3][self.adf_stack[-2]] = self.adf_stack[-1]
         self.adf_stack.pop()
         self.adf_stack.pop()
-        # print('dict_field_set')
 
     def list_push(self):
         self.adf_stack.append([])
-        # print('list_push')
 
     def list_append(self):
         self.adf_stack[-2].append(self.adf_stack[-1])
         self.adf_stack.pop()
-        # print('list_append')
 
     def hash_register(self, hash, offset, sz):
         v = memoryview(self._instance.memory.buffer)[offset:offset + sz]
@@ -123,128 +228,102 @@ class DecaAdfWasm:
 
     def hash32_push(self, value):
         self.adf_stack.append(value)
-        # print(f'bool_push({value})')
 
     def hash48_push(self, value):
         self.adf_stack.append(value)
-        # print(f'bool_push({value})')
 
     def hash64_push(self, value):
         self.adf_stack.append(value)
-        # print(f'bool_push({value})')
 
     def bool_push(self, value):
         self.adf_stack.append(value)
-        # print(f'bool_push({value})')
 
     def s8_push(self, value):
         self.adf_stack.append(value)
-        # print(f's8_push({value})')
 
     def u8_push(self, value):
         self.adf_stack.append(value)
-        # print(f'u8_push({value})')
 
     def s16_push(self, value):
         self.adf_stack.append(value)
-        # print(f's16_push({value})')
 
     def u16_push(self, value):
         self.adf_stack.append(value)
-        # print(f'u16_push({value})')
 
     def s32_push(self, value):
         self.adf_stack.append(value)
-        # print(f's32_push({value})')
 
     def u32_push(self, value):
         self.adf_stack.append(value)
-        # print(f'u32_push({value})')
 
     def s64_push(self, value):
         self.adf_stack.append(value)
-        # print(f's64_push({value})')
 
     def u64_push(self, value):
         self.adf_stack.append(value)
-        # print(f'u64_push({value})')
 
     def f32_push(self, value):
         self.adf_stack.append(value)
-        # print(f'f32_push({value})')
 
     def f64_push(self, value):
         self.adf_stack.append(value)
-        # print(f'f64_push({value})')
 
     def str_push(self, offset, sz):
         value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
         value = bytes(value).decode('utf-8')
         self.adf_stack.append(value)
-        # print(f'str_push({offset}, {sz}) == {value}')
 
     def enum_push(self, value, offset, sz):
         value_str = memoryview(self._instance.memory.buffer)[offset:offset + sz]
         value_str = bytes(value_str).decode('utf-8')
         self.adf_stack.append(DecaAdfEnumValue(value, value_str))
-        # print(f'enum_push({value}, {offset}, {sz}) == {value_str}')
 
     def s8s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 1]
         value = np.frombuffer(value, np.int8)
         self.adf_stack.append(value)
-        # print(f's8s_push({value})')
 
     def u8s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 1]
         value = np.frombuffer(value, np.uint8)
         self.adf_stack.append(value)
-        # print(f'u8s_push({value})')
 
     def s16s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 2]
         value = np.frombuffer(value, np.int16)
         self.adf_stack.append(value)
-        # print(f's16s_push({value})')
 
     def u16s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 2]
         value = np.frombuffer(value, np.uint16)
         self.adf_stack.append(value)
-        # print(f'u16s_push({value})')
 
     def s32s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 4]
         value = np.frombuffer(value, np.int32)
         self.adf_stack.append(value)
-        # print(f's32s_push({value})')
 
     def u32s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 4]
         value = np.frombuffer(value, np.uint32)
         self.adf_stack.append(value)
-        # print(f'u32s_push({value})')
 
     def s64s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 8]
         value = np.frombuffer(value, np.int64)
         self.adf_stack.append(value)
-        # print(f's64s_push({value})')
 
     def u64s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 8]
         value = np.frombuffer(value, np.uint64)
         self.adf_stack.append(value)
-        # print(f'u64s_push({value})')
 
     def f32s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 4]
         value = np.frombuffer(value, np.float32)
         self.adf_stack.append(value)
-        # print(f'f32s_push({value})')
 
     def f64s_push(self, offset, cnt):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 8]
         value = np.frombuffer(value, np.float64)
         self.adf_stack.append(value)
-        # print(f'f64s_push({value})')
