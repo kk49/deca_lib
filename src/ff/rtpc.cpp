@@ -6,44 +6,60 @@
 #include <emscripten.h>
 #include <sstream>
 #include <iostream>
+#include <list>
 
 namespace Rtpc {
-    enum PropType: u8 {
-        k_type_none = 0
-        , k_type_u32 = 1
-        , k_type_f32 = 2
-        , k_type_str = 3
-        , k_type_vec2 = 4
-        , k_type_vec3 = 5
-        , k_type_vec4 = 6
-        , k_type_mat3x3 = 7  // DEPRECIATED?
-        , k_type_mat4x4 = 8
-        , k_type_array_u32 = 9
-        , k_type_array_f32 = 10
-        , k_type_array_u8 = 11
-        , k_type_depreciated_12 = 12
-        , k_type_objid = 13
-        , k_type_array_event = 14
+    enum PropType : u8 {
+        k_type_none = 0,
+        k_type_u32 = 1,
+        k_type_f32 = 2,
+        k_type_str = 3,
+        k_type_vec2 = 4,
+        k_type_vec3 = 5,
+        k_type_vec4 = 6,
+        k_type_mat3x3 = 7  // DEPRECIATED?
+        ,
+        k_type_mat4x4 = 8,
+        k_type_array_u32 = 9,
+        k_type_array_f32 = 10,
+        k_type_array_u8 = 11,
+        k_type_depreciated_12 = 12,
+        k_type_objid = 13,
+        k_type_array_event = 14
     };
 
-    c8 const* to_string(PropType pt) {
-        switch(pt)
-        {
-            case k_type_none: return "none";
-            case k_type_u32: return "u32";
-            case k_type_f32: return "f32";
-            case k_type_str: return "str";
-            case k_type_vec2: return "vec2";
-            case k_type_vec3: return "vec3";
-            case k_type_vec4: return "vec4";
-            case k_type_mat3x3: return "mat3x3";
-            case k_type_mat4x4: return "mat4x4";
-            case k_type_array_u32: return "u32s";
-            case k_type_array_f32: return "f32s";
-            case k_type_array_u8: return "u8s";
-            case k_type_depreciated_12: return "d12";
-            case k_type_objid: return "objid";
-            case k_type_array_event: return "events";
+    c8 const *to_string(PropType pt) {
+        switch (pt) {
+            case k_type_none:
+                return "none";
+            case k_type_u32:
+                return "u32";
+            case k_type_f32:
+                return "f32";
+            case k_type_str:
+                return "str";
+            case k_type_vec2:
+                return "vec2";
+            case k_type_vec3:
+                return "vec3";
+            case k_type_vec4:
+                return "vec4";
+            case k_type_mat3x3:
+                return "mat3x3";
+            case k_type_mat4x4:
+                return "mat4x4";
+            case k_type_array_u32:
+                return "u32s";
+            case k_type_array_f32:
+                return "f32s";
+            case k_type_array_u8:
+                return "u8s";
+            case k_type_depreciated_12:
+                return "d12";
+            case k_type_objid:
+                return "objid";
+            case k_type_array_event:
+                return "events";
         }
     }
 
@@ -78,9 +94,8 @@ namespace Rtpc {
         u32 data_raw_;
         PropType type_;
 
-        c8 const * META_data_pointer(c8 const * beg) const
-        {
-            switch(this->type_) {
+        c8 const *META_data_pointer(c8 const *beg) const {
+            switch (this->type_) {
                 case k_type_none:
                 case k_type_u32:
                 case k_type_f32:
@@ -102,9 +117,8 @@ namespace Rtpc {
             }
         }
 
-        u32 META_data_count(c8 const * beg) const
-        {
-            switch(this->type_) {
+        u32 META_data_count(c8 const *beg) const {
+            switch (this->type_) {
                 case k_type_none:
                 case k_type_depreciated_12:
                 case k_type_str:
@@ -127,7 +141,7 @@ namespace Rtpc {
                 case k_type_array_f32:
                 case k_type_array_u8:
                 case k_type_array_event:
-                    return *(u32 const *)(beg + this->data_raw_);
+                    return *(u32 const *) (beg + this->data_raw_);
             }
         }
     };
@@ -138,43 +152,91 @@ namespace Rtpc {
         u32 data_offset_;
         u16 prop_count_;
         u16 child_count_;
-        std::vector<Property> prop_table_;
-        std::vector<Node> child_table_;
     };
 
     struct Container {
         u32 magic_;
         u32 version_;
-        Node root_node_;
     };
-    
+
     class Visitor {
     public:
-        virtual void visit_prop_data_strz(Property const & prop, c8 const* ptr) {}
-        virtual void visit_prop_data_u8(Property const & prop, u32 n, u8 const* ptr) {}
-        virtual void visit_prop_data_u32(Property const & prop, u32 n, u32 const* ptr) {}
-        virtual void visit_prop_data_u64(Property const & prop, u32 n, u64 const* ptr) {}
-        virtual void visit_prop_data_f32(Property const & prop, u32 n, f32 const* ptr) {}
+        virtual void visit_prop(DecaBufferFile &f, Property const &prop) {
+            c8 const *const data_ptr = prop.META_data_pointer(f.beg_);
+            u32 const data_cnt = prop.META_data_count(f.beg_);
 
-        virtual void visit_node_begin(Node const & node) {}
-        virtual void visit_node_end(Node const & node) {}
-        virtual void visit_node_prop_begin(Node const & node) {}
-        virtual void visit_node_prop_end(Node const & node) {}
-        virtual void visit_node_children_begin(Node const & node) {}
-        virtual void visit_node_children_end(Node const & node) {}
+            switch (prop.type_) {
+                case k_type_array_u8:
+                    this->visit_prop_data_u8(prop, data_cnt, (u8 const *) data_ptr);
+                    break;
+                case k_type_none:
+                case k_type_u32:
+                case k_type_array_u32:
+                    this->visit_prop_data_u32(prop, data_cnt, (u32 const *) data_ptr);
+                    break;
+                case k_type_objid:
+                case k_type_array_event:
+                    this->visit_prop_data_u64(prop, data_cnt, (u64 const *) data_ptr);
+                    break;
+                case k_type_f32:
+                case k_type_vec2:
+                case k_type_vec3:
+                case k_type_vec4:
+                case k_type_mat3x3:
+                case k_type_mat4x4:
+                case k_type_array_f32:
+                    this->visit_prop_data_f32(prop, data_cnt, (f32 const *) data_ptr);
+                    break;
+                case k_type_str:
+                    this->visit_prop_data_strz(prop, data_ptr);
+                    break;
+                default:
+                    db_exception(std::stringstream() << "NOT HANDLED " << prop.type_);
+            }
+        }
 
-        virtual void visit_container_begin(Container const & container) {}
-        virtual void visit_container_end(Container const & container) {}
+        virtual void visit_prop_data_strz(Property const &prop, c8 const *ptr) = 0;
+
+        virtual void visit_prop_data_u8(Property const &prop, u32 n, u8 const *ptr) = 0;
+
+        virtual void visit_prop_data_u32(Property const &prop, u32 n, u32 const *ptr) = 0;
+
+        virtual void visit_prop_data_u64(Property const &prop, u32 n, u64 const *ptr) = 0;
+
+        virtual void visit_prop_data_f32(Property const &prop, u32 n, f32 const *ptr) = 0;
+
+        virtual void visit_node_begin(DecaBufferFile &f, Node const &node) = 0;
+
+        virtual void visit_node_end(DecaBufferFile &f, Node const &node) = 0;
+
+        virtual void visit_node_prop_begin(DecaBufferFile &f, Node const &node) = 0;
+
+        virtual void visit_node_prop_end(DecaBufferFile &f, Node const &node) = 0;
+
+        virtual void visit_node_children_begin(DecaBufferFile &f, Node const &node) = 0;
+
+        virtual void visit_node_children_end(DecaBufferFile &f, Node const &node) = 0;
+
+        virtual void visit_container_begin(DecaBufferFile &f, Container const &container) = 0;
+
+        virtual void visit_container_end(DecaBufferFile &f, Container const &container) = 0;
+
+        virtual Property &prop_table_ref(u32 index) = 0;
+
+        virtual Node &child_table_ref(u32 index) = 0;
+
+        virtual Node &root_ref() = 0;
     };
 
-    void prop_deserialize(Property & prop, DecaBufferFile & f) {
+    void prop_deserialize(DecaBufferFile &f, Property &prop, Visitor &visitor) {
         prop.META_pos_ = f.pos_peek();
         prop.name_hash_ = f.read<u32>();
         prop.data_raw_ = f.read<u32>();
         prop.type_ = (PropType) f.read<u8>();
+        visitor.visit_prop(f, prop);
     }
 
-    void node_deserialize(Node & node, DecaBufferFile & f) {
+    void node_deserialize(DecaBufferFile &f, Node &node, Visitor &visitor) {
         node.META_pos_ = f.pos_peek();
         node.name_hash_ = f.read<u32>();
         node.data_offset_ = f.read<u32>();
@@ -183,98 +245,172 @@ namespace Rtpc {
 
         StorePos old_p(f);
 
+        visitor.visit_node_begin(f, node);
+
         f.pos_seek(node.data_offset_);
 
         // read properties
-        node.prop_table_.resize(node.prop_count_);
-        for(auto && i : node.prop_table_)
-            prop_deserialize(i, f);
+        visitor.visit_node_prop_begin(f, node);
+        for (size_t i = 0; i < node.prop_count_; ++i)
+            prop_deserialize(f, visitor.prop_table_ref(i), visitor);
+        visitor.visit_node_prop_end(f, node);
 
         //  children 4-byte aligned
         size_t pos = f.pos_peek();
         f.pos_seek(pos + (4 - (pos % 4)) % 4);
 
         // read children
-        node.child_table_.resize(node.child_count_);
-        for(auto && i : node.child_table_)
-            node_deserialize(i, f);
+        visitor.visit_node_children_begin(f, node);
+        for (size_t i = 0; i < node.child_count_; ++i)
+            node_deserialize(f, visitor.child_table_ref(i), visitor);
+        visitor.visit_node_children_end(f, node);
+
+        visitor.visit_node_end(f, node);
     }
 
-    bool file_deserialize(Container & rtpc, DecaBufferFile & f)
-    {
-        rtpc.magic_ = f.read<u32>();
+    bool file_deserialize(DecaBufferFile &f, Container &container, Visitor &visitor) {
+        container.magic_ = f.read<u32>();
 
-        if(rtpc.magic_ != 'CPTR')
-            db_exception(std::stringstream() << "Bad MAGIC " << to_hex(rtpc.magic_, 8));
+        if (container.magic_ != 'CPTR')
+            db_exception(std::stringstream() << "Bad MAGIC " << to_hex(container.magic_, 8));
 
-        rtpc.version_ = f.read<u32>();
+        container.version_ = f.read<u32>();
 
-        node_deserialize(rtpc.root_node_, f);
+        visitor.visit_container_begin(f, container);
+
+        node_deserialize(f, visitor.root_ref(), visitor);
+
+        visitor.visit_container_end(f, container);
 
         return true;
     }
 
-    void visitor_prop_process(Property const & prop, DecaBufferFile & f, Visitor & visitor)
-    {
-        c8 const * const data_ptr = prop.META_data_pointer(f.beg_);
-        u32 const data_cnt = prop.META_data_count(f.beg_);
+    struct PropertyStorage : public Property {
 
-        switch(prop.type_)
+    };
+
+    struct NodeStorage : public Node {
+        std::vector<Property> prop_table_;
+        std::vector<Node> child_table_;
+    };
+
+    struct ContainerStorage : public Container {
+        Node root_node_;
+    };
+
+    class VisitorDataStack
+    : public Visitor
+    {
+    public:
+        VisitorDataStack()
+        : working_property_()
+        , node_stack_()
         {
-            case k_type_array_u8:
-                visitor.visit_prop_data_u8(prop, data_cnt, (u8 const*)data_ptr);
-                break;
-            case k_type_none:
-            case k_type_u32:
-            case k_type_array_u32:
-                visitor.visit_prop_data_u32(prop, data_cnt, (u32 const*)data_ptr);
-                break;
-            case k_type_objid:
-            case k_type_array_event:
-                visitor.visit_prop_data_u64(prop, data_cnt, (u64 const*)data_ptr);
-                break;
-            case k_type_f32:
-            case k_type_vec2:
-            case k_type_vec3:
-            case k_type_vec4:
-            case k_type_mat3x3:
-            case k_type_mat4x4:
-            case k_type_array_f32:
-                visitor.visit_prop_data_f32(prop, data_cnt, (f32 const*)data_ptr);
-                break;
-            case k_type_str:
-                visitor.visit_prop_data_strz(prop, data_ptr);
-                break;
-            default:
-               db_exception(std::stringstream() << "NOT HANDLED " << prop.type_);
         }
-    }
 
-    void visitor_node_process(Node const & node, DecaBufferFile & f, Visitor & visitor)
-    {
-        visitor.visit_node_begin(node);
+        Property working_property_;
+        std::list<Node> node_stack_;
 
-        visitor.visit_node_prop_begin(node);
-        for(auto && i : node.prop_table_)
-            visitor_prop_process(i, f, visitor);
-        visitor.visit_node_prop_end(node);
+        void node_push() { this->node_stack_.emplace_back(Node()); }
+        void node_pop() { this->node_stack_.pop_back(); }
+        Node & node_bot() { return *this->node_stack_.begin(); }
+        Node & node_top() { return *this->node_stack_.rbegin(); }
 
-        visitor.visit_node_children_begin(node);
-        for(auto && i : node.child_table_)
-            visitor_node_process(i, f, visitor);
-        visitor.visit_node_children_end(node);
+        void visit_prop_data_strz(Property const & prop, c8 const* ptr) override {
+//            db_print("visit_prop_data_strz");
+            u32_push(prop.name_hash_);
+            str_push(ptr);
+            dict_field_set();
+        }
 
-        visitor.visit_node_end(node);
-    }
+        void visit_prop_data_u8(Property const & prop, u32 n, u8 const* ptr) override {
+//            db_print("visit_prop_data_u8");
+            u32_push(prop.name_hash_);
+            u8s_push(ptr, n);
+            dict_field_set();
+        }
 
-    void visitor_file_process(Container const & container, DecaBufferFile & f, Visitor & visitor)
-    {
-        visitor.visit_container_begin(container);
+        void visit_prop_data_u32(Property const & prop, u32 n, u32 const* ptr) override {
+//            db_print("visit_prop_data_u32");
+            u32_push(prop.name_hash_);
+            u32s_push(ptr, n);
+            dict_field_set();
+        }
 
-        visitor_node_process(container.root_node_, f, visitor);
+        void visit_prop_data_u64(Property const & prop, u32 n, u64 const* ptr) override {
+//            db_print("visit_prop_data_strz");
+            u32_push(prop.name_hash_);
+            u64s_push(ptr, n);
+            dict_field_set();
+        }
 
-        visitor.visit_container_end(container);
-    }
+        void visit_prop_data_f32(Property const & prop, u32 n, f32 const* ptr) override {
+//            db_print("visit_prop_data_f32");
+            u32_push(prop.name_hash_);
+            f32s_push(ptr, n);
+            dict_field_set();
+        }
+
+        void visit_node_begin(DecaBufferFile & f, Node const & node) override {
+//            db_print("visit_node_begin");
+            dict_push();
+            node_push();
+        }
+        void visit_node_end(DecaBufferFile & f, Node const & node) override {
+//            db_print("visit_node_end");
+            list_append();
+            node_pop();
+        }
+
+        void visit_node_prop_begin(DecaBufferFile & f, Node const & node) override
+        {
+//            db_print("visit_node_prop_begin");
+            str_push("properties");
+            dict_push();
+        }
+        void visit_node_prop_end(DecaBufferFile & f, Node const & node) override
+        {
+//            db_print("visit_node_prop_end");
+            dict_field_set();
+        }
+        void visit_node_children_begin(DecaBufferFile & f, Node const & node) override
+        {
+//            db_print("visit_node_children_begin");
+            str_push("children");
+            list_push();
+        }
+        void visit_node_children_end(DecaBufferFile & f, Node const & node) override
+        {
+//            db_print("visit_node_children_end");
+            dict_field_set();
+        }
+
+        void visit_container_begin(DecaBufferFile & f, Container const & container) override {
+//            db_print("visit_container_begin");
+            list_push();
+            node_push();
+        }
+
+        void visit_container_end(DecaBufferFile & f, Container const & container) override {
+//            db_print("visit_container_end");
+            node_pop();
+        }
+
+        Property & prop_table_ref(u32 index) override {
+//            db_print("prop_table_ref");
+            return this->working_property_;
+        }
+
+        Node & child_table_ref(u32 index) override {
+//            db_print("child_table_ref");
+            return node_top();
+        }
+
+        Node & root_ref() override {
+//            db_print("root_ref");
+            return node_bot();
+        }
+    };
 
     template<typename T_> struct XmlSerializeType { typedef T_ Type; };
     template<> struct XmlSerializeType<u8> { typedef u32 Type; };
@@ -285,9 +421,20 @@ namespace Rtpc {
     public:
         VisitorXml(FileHnd file_hnd)
         : file_hnd_(file_hnd)
+        , node_stack_()
+        , working_property_()
         {}
 
         FileHnd file_hnd_;
+        Property working_property_;
+
+//        std::vector<std::shared_ptr<Node>> node_stack_;
+        std::list<Node> node_stack_;
+
+        void node_push() { this->node_stack_.emplace_back(Node()); }
+        void node_pop() { this->node_stack_.pop_back(); }
+        Node & node_bot() { return *this->node_stack_.begin(); }
+        Node & node_top() { return *this->node_stack_.rbegin(); }
 
         template<typename T_>
         void visit_prop_data(Property const & prop, u32 n, T_ const* ptr)
@@ -334,26 +481,42 @@ namespace Rtpc {
             this->visit_prop_data(prop, n, ptr);
         }
 
-        void visit_node_begin(Node const & node) override {
+        void visit_node_begin(DecaBufferFile & f, Node const & node) override {
             xml_w_element_begin(file_hnd_, "object");
             xml_w_attr_set(file_hnd_, "id", "0x" + to_hex(node.name_hash_, 8));
+            node_push();
         }
-        void visit_node_end(Node const & node) override {
+        void visit_node_end(DecaBufferFile & f, Node const & node) override {
             xml_w_element_end(file_hnd_, "object");
+            node_pop();
         }
 
-        void visit_node_prop_begin(Node const & node) override {}
-        void visit_node_prop_end(Node const & node) override {}
-        void visit_node_children_begin(Node const & node) override {}
-        void visit_node_children_end(Node const & node) override {}
+        void visit_node_prop_begin(DecaBufferFile & f, Node const & node) override {}
+        void visit_node_prop_end(DecaBufferFile & f, Node const & node) override {}
+        void visit_node_children_begin(DecaBufferFile & f, Node const & node) override {}
+        void visit_node_children_end(DecaBufferFile & f, Node const & node) override {}
 
-        void visit_container_begin(Container const & container) override {
+        void visit_container_begin(DecaBufferFile & f, Container const & container) override {
             xml_w_element_begin(file_hnd_, "container");
             xml_w_attr_set(file_hnd_, "format", "deca.rtpc");
+            node_push();
         }
 
-        void visit_container_end(Container const & container) override {
+        void visit_container_end(DecaBufferFile & f, Container const & container) override {
             xml_w_element_end(file_hnd_, "container");
+            node_pop();
+        }
+
+        Property & prop_table_ref(u32 index) override {
+            return this->working_property_;
+        }
+
+        Node & child_table_ref(u32 index) override {
+            return node_top();
+        }
+
+        Node & root_ref() override {
+            return node_bot();
         }
     };
 }
@@ -363,15 +526,13 @@ extern "C" {
 EMSCRIPTEN_KEEPALIVE
 bool process_rtpc(FileHnd file_hnd, c8 const* buffer, u64 buffer_sz)
 {
-    Rtpc::Container rtpc;
     DecaBufferFile f(buffer, buffer + buffer_sz);
-
-    if(!Rtpc::file_deserialize(rtpc, f))
-        return false;
-
+    Rtpc::Container rtpc;
     Rtpc::VisitorXml visitor(file_hnd);
+//    Rtpc::VisitorDataStack visitor{};
 
-    Rtpc::visitor_file_process(rtpc, f, visitor);
+    if(!Rtpc::file_deserialize(f, rtpc, visitor))
+        return false;
 
     return true;
 }

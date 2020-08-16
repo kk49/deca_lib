@@ -1,5 +1,6 @@
 import time
 import pprint
+import json
 from deca_adf_lib import DecaLibWasm, DecaLibWasmStack, tostring
 
 lib = DecaLibWasmStack()
@@ -40,16 +41,18 @@ for skip_bytes, fn in test_rtpc:
 
     t3 = time.time()
 
-    # pprint.pprint(lib.adf_stack)
+    print(f'{fn}, value = {value}, Time: {t3-t0} = {t1-t0} + {t2-t1} + {t3-t2}')
 
     if lib.adf_stack:
         adf = lib.adf_stack.pop()
-        with open(fn + '.xml', 'wb') as f:
-            f.write(tostring(adf))
+        if isinstance(adf, list) or isinstance(adf, dict):
+            pass
+        else:
+            with open(fn + '.xml', 'wb') as f:
+                f.write(tostring(adf))
     else:
         adf = None
 
-    print(f'{fn}, value = {value}, Time: {t3-t0} = {t1-t0} + {t2-t1} + {t3-t2}')
 
 for skip_bytes, fn in test_adf:
     with open(fn, 'rb') as f:
@@ -81,3 +84,4 @@ for skip_bytes, fn in test_adf:
         adf = None
 
     print(f'{fn}, value = {value}, Time: {t3-t0} = {t1-t0} + {t2-t1} + {t3-t2}')
+
