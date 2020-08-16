@@ -171,7 +171,7 @@ namespace Rtpc {
 
         switch(prop.type_)
         {
-            case k_type_none: break;
+            case k_type_none: visitor.visit_prop_data_u32(prop, 0, (u32 const*)(f.beg_ + prop.META_pos_ + 4)); break;
             case k_type_u32: visitor.visit_prop_data_u32(prop, 1, (u32 const*)(f.beg_ + prop.META_pos_ + 4)); break;
             case k_type_f32: visitor.visit_prop_data_f32(prop, 1, (f32 const*)(f.beg_ + prop.META_pos_ + 4)); break;
             case k_type_str: visitor.visit_prop_data_strz(prop, (c8 const*)(f.beg_ + prop.data_raw_)); break;

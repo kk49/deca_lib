@@ -192,7 +192,7 @@ std::string to_hex(T_ const & value, u32 width)
     std::stringstream ss;
     ss.width(width);
     ss.fill('0');
-    ss << value;
+    ss << std::hex << value;
 
     return ss.str();
 }

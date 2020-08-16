@@ -15,6 +15,7 @@ test_adf = [
 test_rtpc = [
     [0, '../test/rtpc/global_aesir.blo'],
     [0, '../test/rtpc/global_gui.blo'],
+    [0, '../test/rtpc/abandoned_foa_facility_acoustics.blo'],
 ]
 
 for skip_bytes, fn in test_rtpc:
