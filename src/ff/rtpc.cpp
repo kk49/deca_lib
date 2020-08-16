@@ -23,7 +23,7 @@ namespace Rtpc {
         , k_type_array_u8 = 11
         , k_type_depreciated_12 = 12
         , k_type_objid = 13
-        , k_type_event = 14
+        , k_type_array_event = 14
     };
 
     c8 const* to_string(PropType pt) {
@@ -43,7 +43,7 @@ namespace Rtpc {
             case k_type_array_u8: return "u8s";
             case k_type_depreciated_12: return "d12";
             case k_type_objid: return "objid";
-            case k_type_event: return "event";
+            case k_type_array_event: return "events";
         }
     }
 
@@ -74,10 +74,62 @@ namespace Rtpc {
 
     struct Property {
         u32 META_pos_;
-        u32 META_data_pos_;
         u32 name_hash_;
         u32 data_raw_;
         PropType type_;
+
+        c8 const * META_data_pointer(c8 const * beg) const
+        {
+            switch(this->type_) {
+                case k_type_none:
+                case k_type_u32:
+                case k_type_f32:
+                case k_type_depreciated_12:
+                    return beg + this->META_pos_ + 4;
+                case k_type_str:
+                case k_type_vec2:
+                case k_type_vec3:
+                case k_type_vec4:
+                case k_type_mat3x3:
+                case k_type_mat4x4:
+                case k_type_objid:
+                    return beg + this->data_raw_;
+                case k_type_array_u32:
+                case k_type_array_f32:
+                case k_type_array_u8:
+                case k_type_array_event:
+                    return beg + this->data_raw_ + 4;
+            }
+        }
+
+        u32 META_data_count(c8 const * beg) const
+        {
+            switch(this->type_) {
+                case k_type_none:
+                case k_type_depreciated_12:
+                case k_type_str:
+                    return 0;
+                case k_type_u32:
+                case k_type_f32:
+                case k_type_objid:
+                    return 1;
+                case k_type_vec2:
+                    return 2;
+                case k_type_vec3:
+                    return 3;
+                case k_type_vec4:
+                    return 4;
+                case k_type_mat3x3:
+                    return 9;
+                case k_type_mat4x4:
+                    return 16;
+                case k_type_array_u32:
+                case k_type_array_f32:
+                case k_type_array_u8:
+                case k_type_array_event:
+                    return *(u32 const *)(beg + this->data_raw_);
+            }
+        }
     };
 
     struct Node {
@@ -88,15 +140,31 @@ namespace Rtpc {
         u16 child_count_;
         std::vector<Property> prop_table_;
         std::vector<Node> child_table_;
-
-        u32 prop_map_;
-        u32 child_map_;
     };
 
     struct Container {
         u32 magic_;
         u32 version_;
         Node root_node_;
+    };
+    
+    class Visitor {
+    public:
+        virtual void visit_prop_data_strz(Property const & prop, c8 const* ptr) {}
+        virtual void visit_prop_data_u8(Property const & prop, u32 n, u8 const* ptr) {}
+        virtual void visit_prop_data_u32(Property const & prop, u32 n, u32 const* ptr) {}
+        virtual void visit_prop_data_u64(Property const & prop, u32 n, u64 const* ptr) {}
+        virtual void visit_prop_data_f32(Property const & prop, u32 n, f32 const* ptr) {}
+
+        virtual void visit_node_begin(Node const & node) {}
+        virtual void visit_node_end(Node const & node) {}
+        virtual void visit_node_prop_begin(Node const & node) {}
+        virtual void visit_node_prop_end(Node const & node) {}
+        virtual void visit_node_children_begin(Node const & node) {}
+        virtual void visit_node_children_end(Node const & node) {}
+
+        virtual void visit_container_begin(Container const & container) {}
+        virtual void visit_container_end(Container const & container) {}
     };
 
     void prop_deserialize(Property & prop, DecaBufferFile & f) {
@@ -146,45 +214,37 @@ namespace Rtpc {
         return true;
     }
 
-    class Visitor {
-    public:
-        virtual void visit_prop_data_strz(Property const & prop, c8 const* ptr) {}
-        virtual void visit_prop_data_u8(Property const & prop, u32 n, u8 const* ptr) {}
-        virtual void visit_prop_data_u32(Property const & prop, u32 n, u32 const* ptr) {}
-        virtual void visit_prop_data_u64(Property const & prop, u32 n, u64 const* ptr) {}
-        virtual void visit_prop_data_f32(Property const & prop, u32 n, f32 const* ptr) {}
-
-        virtual void visit_node_begin(Node const & node) {}
-        virtual void visit_node_end(Node const & node) {}
-        virtual void visit_node_prop_begin(Node const & node) {}
-        virtual void visit_node_prop_end(Node const & node) {}
-        virtual void visit_node_children_begin(Node const & node) {}
-        virtual void visit_node_children_end(Node const & node) {}
-
-        virtual void visit_container_begin(Container const & container) {}
-        virtual void visit_container_end(Container const & container) {}
-    };
-
     void visitor_prop_process(Property const & prop, DecaBufferFile & f, Visitor & visitor)
     {
-        c8 const * ptr = f.beg_ + prop.data_raw_;
+        c8 const * const data_ptr = prop.META_data_pointer(f.beg_);
+        u32 const data_cnt = prop.META_data_count(f.beg_);
 
         switch(prop.type_)
         {
-            case k_type_none: visitor.visit_prop_data_u32(prop, 0, (u32 const*)(f.beg_ + prop.META_pos_ + 4)); break;
-            case k_type_u32: visitor.visit_prop_data_u32(prop, 1, (u32 const*)(f.beg_ + prop.META_pos_ + 4)); break;
-            case k_type_f32: visitor.visit_prop_data_f32(prop, 1, (f32 const*)(f.beg_ + prop.META_pos_ + 4)); break;
-            case k_type_str: visitor.visit_prop_data_strz(prop, (c8 const*)(f.beg_ + prop.data_raw_)); break;
-            case k_type_vec2: visitor.visit_prop_data_f32(prop, 2, (f32 const*)ptr); break;
-            case k_type_vec3: visitor.visit_prop_data_f32(prop, 3, (f32 const*)ptr); break;
-            case k_type_vec4: visitor.visit_prop_data_f32(prop, 4, (f32 const*)ptr); break;
-            case k_type_mat3x3: visitor.visit_prop_data_f32(prop, 9, (f32 const*)ptr); break;
-            case k_type_mat4x4: visitor.visit_prop_data_f32(prop, 16, (f32 const*)ptr); break;
-            case k_type_array_u32: visitor.visit_prop_data_u32(prop, *(u32 const *)(ptr), (u32 const*)(ptr + 4)); break;
-            case k_type_array_f32: visitor.visit_prop_data_f32(prop, *(u32 const *)(ptr), (f32 const*)(ptr + 4)); break;
-            case k_type_array_u8: visitor.visit_prop_data_u8(prop, *(u32 const *)(ptr), (u8 const*)(ptr + 4)); break;
-            case k_type_objid: visitor.visit_prop_data_u64(prop, 1, (u64 const*)(f.beg_ + prop.META_pos_ + 4)); break;
-            case k_type_event: visitor.visit_prop_data_u64(prop, *(u32 const *)(ptr), (u64 const*)(ptr + 4)); break;
+            case k_type_array_u8:
+                visitor.visit_prop_data_u8(prop, data_cnt, (u8 const*)data_ptr);
+                break;
+            case k_type_none:
+            case k_type_u32:
+            case k_type_array_u32:
+                visitor.visit_prop_data_u32(prop, data_cnt, (u32 const*)data_ptr);
+                break;
+            case k_type_objid:
+            case k_type_array_event:
+                visitor.visit_prop_data_u64(prop, data_cnt, (u64 const*)data_ptr);
+                break;
+            case k_type_f32:
+            case k_type_vec2:
+            case k_type_vec3:
+            case k_type_vec4:
+            case k_type_mat3x3:
+            case k_type_mat4x4:
+            case k_type_array_f32:
+                visitor.visit_prop_data_f32(prop, data_cnt, (f32 const*)data_ptr);
+                break;
+            case k_type_str:
+                visitor.visit_prop_data_strz(prop, data_ptr);
+                break;
             default:
                db_exception(std::stringstream() << "NOT HANDLED " << prop.type_);
         }
@@ -216,8 +276,8 @@ namespace Rtpc {
         visitor.visit_container_end(container);
     }
 
-    template<typename T_> struct DisplayType { typedef T_ Type; };
-    template<> struct DisplayType<u8> { typedef u32 Type; };
+    template<typename T_> struct XmlSerializeType { typedef T_ Type; };
+    template<> struct XmlSerializeType<u8> { typedef u32 Type; };
 
     class VisitorXml
     : public Visitor
@@ -244,7 +304,7 @@ namespace Rtpc {
             {
                 if(ptr_beg != ptr)
                     ss << ",";
-                ss << (typename DisplayType<T_>::Type)*ptr;
+                ss << (typename XmlSerializeType<T_>::Type)*ptr;
             }
             xml_w_value_set(file_hnd_, ss.str());
             xml_w_element_end(file_hnd_, "value");
