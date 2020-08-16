@@ -9,11 +9,11 @@ extern "C"
     extern void db_error(c8 const * ptr, u32 sz);
 };
 
-void db_print(c8 const* str);
-void db_print(StringRef const & str);
-void db_print(std::string const& str);
-void db_print(std::stringstream const& ss);
-void db_warn(std::string const& str);
-void db_warn(std::stringstream const& ss);
-void db_exception(std::string const& str);
-void db_exception(std::stringstream const& ss);
+template<typename T_>
+void db_print(T_ const& str) { db_print(str_ptr(str), str_sz(str)); }
+
+template<typename T_>
+void db_warn(T_ const& str) { db_warn(str_ptr(str), str_sz(str)); }
+
+template<typename T_>
+void db_exception(T_ const& str) { db_error(str_ptr(str), str_sz(str)); throw DecaException(str); }

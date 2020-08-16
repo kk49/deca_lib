@@ -2,6 +2,7 @@ import wasmer
 import numpy as np
 import sys
 import os
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
 
 class DecaAdfEnumValue:
@@ -52,6 +53,11 @@ class DecaLibWasm:
             'u64s_push': self.u64s_push,
             'f32s_push': self.f32s_push,
             'f64s_push': self.f64s_push,
+
+            'xml_w_element_begin': self.xml_w_element_begin,
+            'xml_w_element_end': self.xml_w_element_end,
+            'xml_w_attr_set': self.xml_w_attr_set,
+            'xml_w_value_set': self.xml_w_value_set,
 
         }
 
@@ -179,6 +185,18 @@ class DecaLibWasm:
         pass
 
     def f64s_push(self, offset, cnt):
+        pass
+
+    def xml_w_element_begin(self, file_hnd, offset, sz):
+        pass
+
+    def xml_w_element_end(self, file_hnd, offset, sz):
+        pass
+
+    def xml_w_attr_set(self, file_hnd, id_offset, id_sz, value_offset, value_sz):
+        pass
+
+    def xml_w_value_set(self, file_hnd, offset, sz):
         pass
 
 
@@ -327,3 +345,33 @@ class DecaLibWasmStack(DecaLibWasm):
         value = memoryview(self._instance.memory.buffer)[offset:offset + cnt * 8]
         value = np.frombuffer(value, np.float64)
         self.adf_stack.append(value)
+
+    def xml_w_element_begin(self, file_hnd, offset, sz):
+        value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
+        value = bytes(value).decode('utf-8')
+        if self.adf_stack:
+            ele = SubElement(self.adf_stack[-1], value)
+        else:
+            ele = Element(value)
+        self.adf_stack.append(ele)
+
+    def xml_w_element_end(self, file_hnd, offset, sz):
+        value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
+        value = bytes(value).decode('utf-8')
+        # print('xml_w_element_end', file_hnd, value)
+        if len(self.adf_stack) > 1:
+            self.adf_stack.pop()
+
+    def xml_w_attr_set(self, file_hnd, id_offset, id_sz, value_offset, value_sz):
+        id_raw = memoryview(self._instance.memory.buffer)[id_offset:id_offset + id_sz]
+        id_str = bytes(id_raw).decode('utf-8')
+        value = memoryview(self._instance.memory.buffer)[value_offset:value_offset + value_sz]
+        value = bytes(value).decode('utf-8')
+        if self.adf_stack:
+            self.adf_stack[-1].set(id_str, value)
+
+    def xml_w_value_set(self, file_hnd, offset, sz):
+        value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
+        value = bytes(value).decode('utf-8')
+        if self.adf_stack:
+            self.adf_stack[-1].text = value

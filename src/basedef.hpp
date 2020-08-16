@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <sstream>
 #include <exception>
 
 typedef char c8;
@@ -27,6 +28,11 @@ public:
     {
     }
 
+    DecaException(std::stringstream const & ss)
+    : std::exception()
+    , msg_(ss.str())
+    {}
+
     std::string msg_;
 };
 
@@ -47,6 +53,8 @@ struct StringRef
     c8 const * ptr_;
     size_t sz_;
 };
+
+
 
 template<typename T_>
 class ArrayRef
@@ -177,3 +185,25 @@ public:
 
 
 std::string to_string(StringRef const & ref);
+
+template<typename T_>
+std::string to_hex(T_ const & value, u32 width)
+{
+    std::stringstream ss;
+    ss.width(width);
+    ss.fill('0');
+    ss << value;
+
+    return ss.str();
+}
+
+c8 const* str_ptr(c8 const *  v);
+u32 str_sz(c8 const *  v);
+
+c8 const* str_ptr(std::string const&  v);
+u32 str_sz(std::string const&  v);
+
+c8 const* str_ptr(std::stringstream const&  v);
+u32 str_sz(std::stringstream const&  v);
+
+

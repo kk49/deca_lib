@@ -6,6 +6,7 @@ SET(CMAKE_CXX_STANDARD 14)
 set(
         SOURCE_FILES
         src/basedef.cpp
+        src/hashes.cpp
         src/i_base.cpp
         src/i_io.cpp
         src/i_data_stack.cpp
@@ -24,6 +25,7 @@ SET(
         --no-entry
         --js-library ${PROJECT_SOURCE_DIR}/src/i_base.js
         --js-library ${PROJECT_SOURCE_DIR}/src/i_data_stack.js
+        --js-library ${PROJECT_SOURCE_DIR}/src/i_xml.js
         --pre-js ${PROJECT_SOURCE_DIR}/src/i_data_stack_pre.js
         -s INITIAL_MEMORY=256MB
         -s MAXIMUM_MEMORY=1GB
