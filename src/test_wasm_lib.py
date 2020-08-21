@@ -19,6 +19,8 @@ test_rtpc = [
     [0, '../test/rtpc/abandoned_foa_facility_acoustics.blo'],
 ]
 
+test_xml = []
+
 for skip_bytes, fn in test_rtpc:
     with open(fn, 'rb') as f:
         input_buffer = f.read()
@@ -48,11 +50,15 @@ for skip_bytes, fn in test_rtpc:
         if isinstance(adf, list) or isinstance(adf, dict):
             pass
         else:
-            with open(fn + '.xml', 'wb') as f:
+            fnn = fn + '.xml'
+            with open(fnn, 'wb') as f:
                 f.write(tostring(adf))
+            test_xml.append(fnn)
     else:
         adf = None
 
+for fn in test_xml:
+    lib.xml_parse(fn, fn + '.rtpc')
 
 for skip_bytes, fn in test_adf:
     with open(fn, 'rb') as f:

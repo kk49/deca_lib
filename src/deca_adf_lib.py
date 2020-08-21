@@ -2,8 +2,9 @@ import wasmer
 import numpy as np
 import sys
 import os
+from collections import defaultdict
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
-
+import xml.etree.ElementTree as ET
 
 class DecaAdfEnumValue:
     def __init__(self, value, value_str):
@@ -14,6 +15,12 @@ class DecaAdfEnumValue:
 class DecaLibWasm:
     def __init__(self, *args, **kwargs):
         lib_env = {
+            'file_open': self.file_open,
+            'file_close': self.file_close,
+            'file_size': self.file_size,
+            'file_read': self.file_read,
+            'file_write': self.file_write,
+
             'db_print': self.db_print,
             'db_warn': self.db_warn,
             'db_error': self.db_error,
@@ -82,8 +89,41 @@ class DecaLibWasm:
 
         self._instance = wasmer.Instance(wasm_bytes, import_object)
 
+        self._instance.exports._initialize()
+
     def instance(self):
         return self._instance
+
+    def xlm_tree_element(self, hnd, ele: Element):
+        self.instance().exports.xml_r_element_begin(hnd, ele.tag)
+        self.instance().exports.xml_r_element_end(hnd, ele.tag)
+        self.instance().exports.xml_r_element_close(hnd, ele.tag)
+
+    def xml_parse(self, fn, fn_out):
+        tree = ET.parse(fn)
+        root = tree.getroot()
+        hnd = None
+        try:
+            hnd = self.instance().exports.xml_r_open()
+            self.xlm_tree_element(hnd, root)
+        finally:
+            if hnd is not None:
+                self.instance().exports.xml_r_close(hnd)
+
+    def file_open(self, path_ptr, path_sz, mode_ptr, mode_sz):
+        pass
+
+    def file_close(self, hnd):
+        pass
+
+    def file_size(self, hnd):
+        pass
+
+    def file_read(self, hnd, pos, ptr, sz):
+        pass
+
+    def file_write(self, hnd, pos, ptr, sz):
+        pass
 
     def db_print(self, offset, sz):
         pass
@@ -202,11 +242,72 @@ class DecaLibWasm:
 
 class DecaLibWasmStack(DecaLibWasm):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.adf_stack = []
+        self.files_map = defaultdict(bytearray)
+        self.files_open = {}
+        self.files_hnd = 0
+        super().__init__(*args, **kwargs)
 
-    def instance(self):
-        return self._instance
+    def file_open(self, path_ptr, path_sz, mode_ptr, mode_sz):
+        path = memoryview(self._instance.memory.buffer)[path_ptr:path_ptr + path_sz]
+        path = bytes(path)
+        mode = memoryview(self._instance.memory.buffer)[mode_ptr:mode_ptr + mode_sz]
+        mode = bytes(mode)
+        print(f'file_open({path},{mode})')
+
+        file = self.files_map[path]
+
+        hnd = self.files_hnd
+        self.files_hnd += 1
+        self.files_open[hnd] = file
+        return hnd
+
+    def file_close(self, hnd):
+        print(f'file_close({hnd})')
+        if hnd in self.files_open:
+            self.files_open.pop(hnd, None)
+
+    def file_size(self, hnd):
+        print(f'file_size({hnd})')
+        if hnd in self.files_open:
+            file = self.files_open.get(hnd, bytearray())
+            return len(file)
+        else:
+            return -1
+
+    def file_read(self, hnd, pos, ptr, sz):
+        print(f'file_read({hnd}, {pos}, {ptr}, {sz})')
+        if hnd in self.files_open:
+            file = self.files_open[hnd]
+            sz_final = min(sz, len(file)-pos)
+            if sz_final > 0:
+                input_wasm = self._instance.memory.uint8_view(ptr)
+                input_wasm[:sz_final] = file[pos:pos+sz_final]
+            return sz_final
+        else:
+            return -1
+
+    def file_write(self, hnd, pos, ptr, sz):
+        buffer = memoryview(self._instance.memory.buffer)[ptr:ptr + sz]
+        buffer = bytes(buffer)
+        print(f'file_write({hnd}, {pos}, {buffer})')
+
+        if hnd in self.files_open:
+            file: bytearray = self.files_open[hnd]
+            if pos > len(file) or pos < 0:
+                return -1
+
+            dsz = (pos+sz) - len(file)
+            if dsz > 0:
+                file[pos:pos+(sz-dsz)] = buffer[0:(sz-dsz)]
+                file.extend(buffer[(sz-dsz):])
+            else:
+                file[pos:pos+sz] = buffer[:]
+
+            return sz
+        else:
+            return -1
+
 
     def db_print(self, offset, sz):
         v = memoryview(self._instance.memory.buffer)[offset:offset + sz]

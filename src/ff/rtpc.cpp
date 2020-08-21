@@ -2,7 +2,7 @@
 #include "../hashes.hpp"
 #include "../i_base.hpp"
 #include "../i_data_stack.hpp"
-#include "../i_xml.hpp"
+#include "../i_xml_out.hpp"
 #include <emscripten.h>
 #include <sstream>
 #include <iostream>
