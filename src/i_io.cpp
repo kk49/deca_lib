@@ -19,7 +19,7 @@ c8 *alloc_bin(u64 sz) {
 
 }
 
-std::ostream wasm_out{new WasmStreamBuf("wasm_out")};
-std::ostream wasm_err{new WasmStreamBuf("wasm_err")};
-std::istream wasm_in{new WasmStreamBuf("wasm_in")};
+std::ostream wasm_out{new WasmStreamBuf("stdout")};
+std::ostream wasm_err{new WasmStreamBuf("stderr")};
+std::istream wasm_in{new WasmStreamBuf("stdin")};
 

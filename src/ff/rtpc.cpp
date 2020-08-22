@@ -8,6 +8,8 @@
 #include <iostream>
 #include <list>
 
+typedef DecaBufferFile RtpcFileType;
+
 namespace Rtpc {
     enum PropType : u8 {
         k_type_none = 0,
@@ -64,53 +66,54 @@ namespace Rtpc {
     }
 
 
-    u32 static const h_prop_class = hash32_func("_class");
-    u32 static const h_prop_class_hash = hash32_func("_class_hash");
-    u32 static const h_prop_name = hash32_func("name");
-    u32 static const h_prop_world = hash32_func("world");
-    u32 static const h_prop_script = hash32_func("script");
-    u32 static const h_prop_border = hash32_func("border");
-    u32 static const h_prop_object_id = hash32_func("_object_id");
-    u32 static const h_prop_label_key = hash32_func("label_key");
-    u32 static const h_prop_note = hash32_func("note");
-    u32 static const h_prop_spline = hash32_func("spline");
-    u32 static const h_prop_spawn_tags = hash32_func("spawn_tags");
-    u32 static const h_prop_model_skeleton = hash32_func("model_skeleton");
-    u32 static const h_prop_skeleton = hash32_func("skeleton");
-    u32 static const h_prop_need_type = hash32_func("need_type");
-    u32 static const h_prop_start_time = hash32_func("start_time");
+//    u32 static const h_prop_class = hash32_func("_class");
+//    u32 static const h_prop_class_hash = hash32_func("_class_hash");
+//    u32 static const h_prop_name = hash32_func("name");
+//    u32 static const h_prop_world = hash32_func("world");
+//    u32 static const h_prop_script = hash32_func("script");
+//    u32 static const h_prop_border = hash32_func("border");
+//    u32 static const h_prop_object_id = hash32_func("_object_id");
+//    u32 static const h_prop_label_key = hash32_func("label_key");
+//    u32 static const h_prop_note = hash32_func("note");
+//    u32 static const h_prop_spline = hash32_func("spline");
+//    u32 static const h_prop_spawn_tags = hash32_func("spawn_tags");
+//    u32 static const h_prop_model_skeleton = hash32_func("model_skeleton");
+//    u32 static const h_prop_skeleton = hash32_func("skeleton");
+//    u32 static const h_prop_need_type = hash32_func("need_type");
+//    u32 static const h_prop_start_time = hash32_func("start_time");
+//
+//    u32 static const h_prop_item_item_id = hash32_func("[Item]  Item ID");
+//    u32 static const h_prop_ref_apex_identifier = hash32_func("[ref] apex identifier");
+//
+//    // guess at naming these fields
+//    u32 static const h_prop_deca_crafting_type = 0xa949bc65;
+//    u32 static const h_prop_deca_cpoi_desc = 0xe6b6b3f9;
 
-    u32 static const h_prop_item_item_id = hash32_func("[Item]  Item ID");
-    u32 static const h_prop_ref_apex_identifier = hash32_func("[ref] apex identifier");
 
-// guess at naming these fields
-    u32 static const h_prop_deca_crafting_type = 0xa949bc65;
-    u32 static const h_prop_deca_cpoi_desc = 0xe6b6b3f9;
-
-
-    template<typename Container_, typename Node_, typename Property_>
+    template<typename Container_, typename Node_, typename Property_, typename File_>
     class Visitor {
     public:
         typedef Container_ ContainerType;
         typedef Node_ NodeType;
         typedef Property_ PropertyType;
+        typedef File_ FileType;
 
-        virtual void visit_prop(DecaBufferFile &f, size_t index, PropertyType &prop) {
-            c8 const *const data_ptr = prop.META_data_pointer(f.beg_);
-            u32 const data_cnt = prop.META_data_count(f.beg_);
+        virtual void visit_prop(FileType &f, size_t index, PropertyType &prop) {
+            s64 const offset = prop.META_data_offset();
+            s64 const data_cnt = prop.META_data_count();
 
             switch (prop.type_) {
                 case k_type_array_u8:
-                    this->visit_prop_data_u8(index, prop, data_cnt, (u8 const *) data_ptr);
+                    this->visit_prop_data_u8(f, index, prop, data_cnt, offset);
                     break;
                 case k_type_none:
                 case k_type_u32:
                 case k_type_array_u32:
-                    this->visit_prop_data_u32(index, prop, data_cnt, (u32 const *) data_ptr);
+                    this->visit_prop_data_u32(f, index, prop, data_cnt, offset);
                     break;
                 case k_type_objid:
                 case k_type_array_event:
-                    this->visit_prop_data_u64(index, prop, data_cnt, (u64 const *) data_ptr);
+                    this->visit_prop_data_u64(f, index, prop, data_cnt, offset);
                     break;
                 case k_type_f32:
                 case k_type_vec2:
@@ -119,41 +122,41 @@ namespace Rtpc {
                 case k_type_mat3x3:
                 case k_type_mat4x4:
                 case k_type_array_f32:
-                    this->visit_prop_data_f32(index, prop, data_cnt, (f32 const *) data_ptr);
+                    this->visit_prop_data_f32(f, index, prop, data_cnt, offset);
                     break;
                 case k_type_str:
-                    this->visit_prop_data_strz(index, prop, data_ptr);
+                    this->visit_prop_data_strz(f, index, prop, offset);
                     break;
                 default:
                     db_exception(std::stringstream() << "NOT HANDLED " << prop.type_);
             }
         }
 
-        virtual void visit_prop_data_strz(size_t index, PropertyType &prop, c8 const *ptr) = 0;
+        virtual void visit_prop_data_strz(FileType & f, size_t index, PropertyType &prop, s64 offset) = 0;
 
-        virtual void visit_prop_data_u8(size_t index, PropertyType &prop, u32 n, u8 const *ptr) = 0;
+        virtual void visit_prop_data_u8(FileType & f, size_t index, PropertyType &prop, s64 n, s64 offset) = 0;
 
-        virtual void visit_prop_data_u32(size_t index, PropertyType &prop, u32 n, u32 const *ptr) = 0;
+        virtual void visit_prop_data_u32(FileType & f, size_t index, PropertyType &prop, s64 n, s64 offset) = 0;
 
-        virtual void visit_prop_data_u64(size_t index, PropertyType &prop, u32 n, u64 const *ptr) = 0;
+        virtual void visit_prop_data_u64(FileType & f, size_t index, PropertyType &prop, s64 n, s64 offset) = 0;
 
-        virtual void visit_prop_data_f32(size_t index, PropertyType &prop, u32 n, f32 const *ptr) = 0;
+        virtual void visit_prop_data_f32(FileType & f, size_t index, PropertyType &prop, s64 n, s64 offset) = 0;
 
-        virtual void visit_node_begin(DecaBufferFile &f, size_t index, NodeType &node) = 0;
+        virtual void visit_node_begin(FileType &f, size_t index, NodeType &node) = 0;
 
-        virtual void visit_node_end(DecaBufferFile &f, size_t index, NodeType &node) = 0;
+        virtual void visit_node_end(FileType &f, size_t index, NodeType &node) = 0;
 
-        virtual void visit_node_prop_begin(DecaBufferFile &f, size_t index, NodeType &node) = 0;
+        virtual void visit_node_prop_begin(FileType &f, size_t index, NodeType &node) = 0;
 
-        virtual void visit_node_prop_end(DecaBufferFile &f, size_t index, NodeType &node) = 0;
+        virtual void visit_node_prop_end(FileType &f, size_t index, NodeType &node) = 0;
 
-        virtual void visit_node_children_begin(DecaBufferFile &f, size_t index, NodeType &node) = 0;
+        virtual void visit_node_children_begin(FileType &f, size_t index, NodeType &node) = 0;
 
-        virtual void visit_node_children_end(DecaBufferFile &f, size_t index, NodeType &node) = 0;
+        virtual void visit_node_children_end(FileType &f, size_t index, NodeType &node) = 0;
 
-        virtual void visit_container_begin(DecaBufferFile &f, ContainerType &container) = 0;
+        virtual void visit_container_begin(FileType &f, ContainerType &container) = 0;
 
-        virtual void visit_container_end(DecaBufferFile &f, ContainerType &container) = 0;
+        virtual void visit_container_end(FileType &f, ContainerType &container) = 0;
 
         virtual PropertyType &prop_table_ref(NodeType &node, u32 index) = 0;
 
@@ -164,22 +167,22 @@ namespace Rtpc {
         virtual ContainerType & container_ref() = 0;
     };
 
-    template<typename Container_, typename Node_, typename Property_>
-    void prop_deserialize(DecaBufferFile &f, size_t index, Property_ &prop, Visitor<Container_, Node_, Property_> &visitor) {
+    template<typename Container_, typename Node_, typename Property_, typename File_>
+    void prop_deserialize(File_ &f, size_t index, Property_ &prop, Visitor<Container_, Node_, Property_, File_> &visitor) {
         prop.META_pos_ = f.pos_peek();
-        prop.name_hash_ = f.read<u32>();
-        prop.data_raw_ = f.read<u32>();
-        prop.type_ = (PropType) f.read<u8>();
+        prop.name_hash_ = f.template read<u32>();
+        prop.data_raw_ = f.template read<u32>();
+        prop.type_ = (PropType) f.template read<u8>();
         visitor.visit_prop(f, index, prop);
     }
 
-    template<typename Container_, typename Node_, typename Property_>
-    void node_deserialize(DecaBufferFile &f, size_t index, Node_ &node, Visitor<Container_, Node_, Property_> &visitor) {
+    template<typename Container_, typename Node_, typename Property_, typename File_>
+    void node_deserialize(File_ &f, size_t index, Node_ &node, Visitor<Container_, Node_, Property_, File_> &visitor) {
         node.META_pos_ = f.pos_peek();
-        node.name_hash_ = f.read<u32>();
-        node.data_offset_ = f.read<u32>();
-        node.prop_count_ = f.read<u16>();
-        node.child_count_ = f.read<u16>();
+        node.name_hash_ = f.template read<u32>();
+        node.data_offset_ = f.template read<u32>();
+        node.prop_count_ = f.template read<u16>();
+        node.child_count_ = f.template read<u16>();
 
         StorePos old_p(f);
 
@@ -206,16 +209,16 @@ namespace Rtpc {
         visitor.visit_node_end(f, index,node);
     }
 
-    template<typename Container_, typename Node_, typename Property_>
-    bool file_deserialize(DecaBufferFile &f, Visitor<Container_, Node_, Property_> &visitor) {
+    template<typename Container_, typename Node_, typename Property_, typename File_>
+    bool file_deserialize(File_ &f, Visitor<Container_, Node_, Property_, File_> &visitor) {
         Container_ & container = visitor.container_ref();
 
-        container.magic_ = f.read<u32>();
+        container.magic_ = f.template read<u32>();
 
         if (container.magic_ != 'CPTR')
             db_exception(std::stringstream() << "Bad MAGIC " << to_hex(container.magic_, 8));
 
-        container.version_ = f.read<u32>();
+        container.version_ = f.template read<u32>();
 
         visitor.visit_container_begin(f, container);
 
@@ -232,13 +235,13 @@ namespace Rtpc {
         u32 data_raw_;
         PropType type_;
 
-        c8 const *META_data_pointer(c8 const *beg) const {
+        [[nodiscard]] s64 META_data_offset() const {
             switch (this->type_) {
                 case k_type_none:
                 case k_type_u32:
                 case k_type_f32:
                 case k_type_depreciated_12:
-                    return beg + this->META_pos_ + 4;
+                    return this->META_pos_ + 4;
                 case k_type_str:
                 case k_type_vec2:
                 case k_type_vec3:
@@ -246,16 +249,16 @@ namespace Rtpc {
                 case k_type_mat3x3:
                 case k_type_mat4x4:
                 case k_type_objid:
-                    return beg + this->data_raw_;
+                    return this->data_raw_;
                 case k_type_array_u32:
                 case k_type_array_f32:
                 case k_type_array_u8:
                 case k_type_array_event:
-                    return beg + this->data_raw_ + 4;
+                    return this->data_raw_ + 4;
             }
         }
 
-        u32 META_data_count(c8 const *beg) const {
+        [[nodiscard]] s64 META_data_count() const {
             switch (this->type_) {
                 case k_type_none:
                 case k_type_depreciated_12:
@@ -279,7 +282,7 @@ namespace Rtpc {
                 case k_type_array_f32:
                 case k_type_array_u8:
                 case k_type_array_event:
-                    return *(u32 const *) (beg + this->data_raw_);
+                    return -1;
             }
         }
     };
@@ -299,7 +302,7 @@ namespace Rtpc {
 
 
     class VisitorDataStack
-    : public Visitor<Container, Node, Property>
+    : public Visitor<Container, Node, Property, RtpcFileType>
     {
     public:
         VisitorDataStack()
@@ -318,82 +321,95 @@ namespace Rtpc {
         Node & node_bot() { return *this->node_stack_.begin(); }
         Node & node_top() { return *this->node_stack_.rbegin(); }
 
-        void visit_prop_data_strz(size_t index, Property &prop, c8 const* ptr) override {
+        void visit_prop_data_strz(FileType & f, size_t index, Property &prop, s64 offset) override {
 //            db_print("visit_prop_data_strz");
             u32_push(prop.name_hash_);
-            str_push(ptr);
+            str_push(f.read_strz(offset));
             dict_field_set();
         }
 
-        void visit_prop_data_u8(size_t index, Property &prop, u32 n, u8 const* ptr) override {
+        void visit_prop_data_u8(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
 //            db_print("visit_prop_data_u8");
+            if(n < 0)
+                n = f.read<u32>(offset);
+
             u32_push(prop.name_hash_);
-            u8s_push(ptr, n);
+            u8s_push((u8*)(f.beg_ + offset), n);
             dict_field_set();
         }
 
-        void visit_prop_data_u32(size_t index, Property &prop, u32 n, u32 const* ptr) override {
+        void visit_prop_data_u32(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
 //            db_print("visit_prop_data_u32");
+
+            if(n < 0)
+                n = f.read<u32>(offset);
+
             u32_push(prop.name_hash_);
-            u32s_push(ptr, n);
+            u32s_push((u32*)(f.beg_ + offset), n);
             dict_field_set();
         }
 
-        void visit_prop_data_u64(size_t index, Property &prop, u32 n, u64 const* ptr) override {
+        void visit_prop_data_u64(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
 //            db_print("visit_prop_data_strz");
+            if(n < 0)
+                n = f.read<u32>(offset);
+
             u32_push(prop.name_hash_);
-            u64s_push(ptr, n);
+            u64s_push((u64*)(f.beg_ + offset), n);
             dict_field_set();
         }
 
-        void visit_prop_data_f32(size_t index, Property &prop, u32 n, f32 const* ptr) override {
+        void visit_prop_data_f32(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
 //            db_print("visit_prop_data_f32");
+            if(n < 0)
+                n = f.read<u32>(offset);
+
             u32_push(prop.name_hash_);
-            f32s_push(ptr, n);
+            f32s_push((f32*)(f.beg_ + offset), n);
             dict_field_set();
         }
 
-        void visit_node_begin(DecaBufferFile & f, size_t index, Node &node) override {
+        void visit_node_begin(FileType & f, size_t index, Node &node) override {
 //            db_print("visit_node_begin");
             dict_push();
             node_push();
         }
-        void visit_node_end(DecaBufferFile & f, size_t index, Node &node) override {
+        void visit_node_end(FileType & f, size_t index, Node &node) override {
 //            db_print("visit_node_end");
             list_append();
             node_pop();
         }
 
-        void visit_node_prop_begin(DecaBufferFile & f, size_t index, Node &node) override
+        void visit_node_prop_begin(FileType & f, size_t index, Node &node) override
         {
 //            db_print("visit_node_prop_begin");
             str_push("properties");
             dict_push();
         }
-        void visit_node_prop_end(DecaBufferFile & f, size_t index, Node &node) override
+        void visit_node_prop_end(FileType & f, size_t index, Node &node) override
         {
 //            db_print("visit_node_prop_end");
             dict_field_set();
         }
-        void visit_node_children_begin(DecaBufferFile & f, size_t index, Node &node) override
+        void visit_node_children_begin(FileType & f, size_t index, Node &node) override
         {
 //            db_print("visit_node_children_begin");
             str_push("children");
             list_push();
         }
-        void visit_node_children_end(DecaBufferFile & f, size_t index, Node &node) override
+        void visit_node_children_end(FileType & f, size_t index, Node &node) override
         {
 //            db_print("visit_node_children_end");
             dict_field_set();
         }
 
-        void visit_container_begin(DecaBufferFile & f, Container &container) override {
+        void visit_container_begin(FileType & f, Container &container) override {
 //            db_print("visit_container_begin");
             list_push();
             node_push();
         }
 
-        void visit_container_end(DecaBufferFile & f, Container &container) override {
+        void visit_container_end(FileType & f, Container &container) override {
 //            db_print("visit_container_end");
             node_pop();
         }
@@ -422,7 +438,7 @@ namespace Rtpc {
     template<> struct XmlSerializeType<u8> { typedef u32 Type; };
 
     class VisitorXml
-    : public Visitor<Container, Node, Property>
+    : public Visitor<Container, Node, Property, RtpcFileType>
     {
     public:
         VisitorXml(FileHnd file_hnd)
@@ -445,16 +461,17 @@ namespace Rtpc {
         Node & node_top() { return *this->node_stack_.rbegin(); }
 
         template<typename T_>
-        void visit_prop_data(size_t index, Property &prop, u32 n, T_ const* ptr)
+        void visit_prop_data(FileType & f, size_t index, Property &prop, s64 n, s64 offset)
         {
             xml_w_element_begin(file_hnd_, "value");
             xml_w_attr_set(file_hnd_, "id", std::stringstream() << "0x" << to_hex(prop.name_hash_, 8));
             xml_w_attr_set(file_hnd_, "type", to_string(prop.type_));
 
+            auto data = f.reads<T_>(n, offset);
+            auto ptr = data.ptr_;
+            auto ptr_beg = data.ptr_;
+            auto ptr_end = data.ptr_ + data.cnt_;
             std::stringstream ss;
-            auto ptr_beg = ptr;
-            auto ptr_end = ptr + n;
-
             for(;ptr < ptr_end; ++ptr)
             {
                 if(ptr_beg != ptr)
@@ -462,55 +479,56 @@ namespace Rtpc {
                 ss << (typename XmlSerializeType<T_>::Type)*ptr;
             }
             xml_w_value_set(file_hnd_, ss.str());
+
             xml_w_element_end(file_hnd_, "value");
         }
 
-        void visit_prop_data_strz(size_t index, Property &prop, c8 const* ptr) override {
+        void visit_prop_data_strz(FileType & f, size_t index, Property &prop, s64 offset) override {
             xml_w_element_begin(file_hnd_, "value");
             xml_w_attr_set(file_hnd_, "id", "0x" + to_hex(prop.name_hash_, 8));
             xml_w_attr_set(file_hnd_, "type", to_string(prop.type_));
-            xml_w_value_set(file_hnd_, ptr);
+            xml_w_value_set(file_hnd_, f.read_strz(offset));
             xml_w_element_end(file_hnd_, "value");
         }
 
-        void visit_prop_data_u8(size_t index, Property &prop, u32 n, u8 const* ptr) override {
-            this->visit_prop_data(index, prop, n, ptr);
+        void visit_prop_data_u8(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
+            this->visit_prop_data<u8>(f, index, prop, n, offset);
         }
 
-        void visit_prop_data_u32(size_t index, Property &prop, u32 n, u32 const* ptr) override {
-            this->visit_prop_data(index, prop, n, ptr);
+        void visit_prop_data_u32(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
+            this->visit_prop_data<u32>(f, index, prop, n, offset);
         }
 
-        void visit_prop_data_u64(size_t index, Property &prop, u32 n, u64 const* ptr) override {
-            this->visit_prop_data(index, prop, n, ptr);
+        void visit_prop_data_u64(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
+            this->visit_prop_data<u64>(f, index, prop, n, offset);
         }
 
-        void visit_prop_data_f32(size_t index, Property &prop, u32 n, f32 const* ptr) override {
-            this->visit_prop_data(index, prop, n, ptr);
+        void visit_prop_data_f32(FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
+            this->visit_prop_data<f32>(f, index, prop, n, offset);
         }
 
-        void visit_node_begin(DecaBufferFile & f, size_t index, Node &node) override {
+        void visit_node_begin(FileType & f, size_t index, Node &node) override {
             xml_w_element_begin(file_hnd_, "object");
             xml_w_attr_set(file_hnd_, "id", "0x" + to_hex(node.name_hash_, 8));
             node_push();
         }
-        void visit_node_end(DecaBufferFile & f, size_t index, Node &node) override {
+        void visit_node_end(FileType & f, size_t index, Node &node) override {
             xml_w_element_end(file_hnd_, "object");
             node_pop();
         }
 
-        void visit_node_prop_begin(DecaBufferFile & f, size_t index, Node &node) override {}
-        void visit_node_prop_end(DecaBufferFile & f, size_t index, Node &node) override {}
-        void visit_node_children_begin(DecaBufferFile & f, size_t index, Node &node) override {}
-        void visit_node_children_end(DecaBufferFile & f, size_t index, Node &node) override {}
+        void visit_node_prop_begin(FileType & f, size_t index, Node &node) override {}
+        void visit_node_prop_end(FileType & f, size_t index, Node &node) override {}
+        void visit_node_children_begin(FileType & f, size_t index, Node &node) override {}
+        void visit_node_children_end(FileType & f, size_t index, Node &node) override {}
 
-        void visit_container_begin(DecaBufferFile & f, Container &container) override {
+        void visit_container_begin(FileType & f, Container &container) override {
             xml_w_element_begin(file_hnd_, "container");
             xml_w_attr_set(file_hnd_, "format", "deca.rtpc");
             node_push();
         }
 
-        void visit_container_end(DecaBufferFile & f, Container &container) override {
+        void visit_container_end(FileType & f, Container &container) override {
             xml_w_element_end(file_hnd_, "container");
             node_pop();
         }
@@ -548,12 +566,12 @@ namespace Rtpc {
     };
 
     class VisitorStorage
-    : public Visitor<ContainerStorage, NodeStorage, PropertyStorage>
+    : public Visitor<ContainerStorage, NodeStorage, PropertyStorage, RtpcFileType>
     {
     public:
         VisitorStorage()
-                : container_()
-                , node_stack_()
+        : container_()
+        , node_stack_()
         {
         }
 
@@ -565,45 +583,45 @@ namespace Rtpc {
         NodeStorage* node_bot() { return *this->node_stack_.begin(); }
         NodeStorage* node_top() { return *this->node_stack_.rbegin(); }
 
-        void visit_prop_data_strz(size_t index, PropertyStorage &prop, c8 const* ptr) override {
+        void visit_prop_data_strz(FileType & f, size_t index, PropertyStorage &prop, s64 offset) override {
         }
 
-        void visit_prop_data_u8(size_t index, PropertyStorage &prop, u32 n, u8 const* ptr) override {
+        void visit_prop_data_u8(FileType & f, size_t index, PropertyStorage &prop, s64 n, s64 offset) override {
         }
 
-        void visit_prop_data_u32(size_t index, PropertyStorage &prop, u32 n, u32 const* ptr) override {
+        void visit_prop_data_u32(FileType & f, size_t index, PropertyStorage &prop, s64 n, s64 offset) override {
         }
 
-        void visit_prop_data_u64(size_t index, PropertyStorage &prop, u32 n, u64 const* ptr) override {
+        void visit_prop_data_u64(FileType & f, size_t index, PropertyStorage &prop, s64 n, s64 offset) override {
         }
 
-        void visit_prop_data_f32(size_t index, PropertyStorage &prop, u32 n, f32 const* ptr) override {
+        void visit_prop_data_f32(FileType & f, size_t index, PropertyStorage &prop, s64 n, s64 offset) override {
         }
 
-        void visit_node_begin(DecaBufferFile & f, size_t index, NodeStorage &node) override {
+        void visit_node_begin(FileType & f, size_t index, NodeStorage &node) override {
             node.prop_table_.resize(node.prop_count_);
             node.child_table_.resize(node.child_count_);
         }
 
-        void visit_node_end(DecaBufferFile & f, size_t index, NodeStorage &node) override {
+        void visit_node_end(FileType & f, size_t index, NodeStorage &node) override {
         }
 
-        void visit_node_prop_begin(DecaBufferFile & f, size_t index, NodeStorage &node) override
+        void visit_node_prop_begin(FileType & f, size_t index, NodeStorage &node) override
         {
         }
-        void visit_node_prop_end(DecaBufferFile & f, size_t index, NodeStorage &node) override
+        void visit_node_prop_end(FileType & f, size_t index, NodeStorage &node) override
         {
         }
-        void visit_node_children_begin(DecaBufferFile & f, size_t index, NodeStorage &node) override {
+        void visit_node_children_begin(FileType & f, size_t index, NodeStorage &node) override {
         }
 
-        void visit_node_children_end(DecaBufferFile & f, size_t index, NodeStorage &node) override {
+        void visit_node_children_end(FileType & f, size_t index, NodeStorage &node) override {
         }
 
-        void visit_container_begin(DecaBufferFile & f, ContainerStorage &container) override {
+        void visit_container_begin(FileType & f, ContainerStorage &container) override {
         }
 
-        void visit_container_end(DecaBufferFile & f, ContainerStorage &container) override {
+        void visit_container_end(FileType & f, ContainerStorage &container) override {
         }
 
         PropertyStorage & prop_table_ref(NodeStorage & node, u32 index) override {
@@ -631,6 +649,7 @@ EMSCRIPTEN_KEEPALIVE
 bool process_rtpc(FileHnd file_hnd, c8 const* buffer, u64 buffer_sz)
 {
     DecaBufferFile f(buffer, buffer + buffer_sz);
+//    DecaBufferFile2 f(file_hnd);
 
     Rtpc::VisitorXml visitor(file_hnd);
 //    Rtpc::VisitorDataStack visitor{};

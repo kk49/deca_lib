@@ -92,11 +92,6 @@ public:
 
     size_t size() const { return end_ - beg_; }
 
-    void pos_reset()
-    {
-        ptr_ = beg_;
-    }
-
     size_t pos_peek() const
     {
         return ptr_ - beg_;
@@ -108,40 +103,58 @@ public:
     }
 
     template<typename T_>
-    T_ read()
+    T_ read(s64 offset = -1)
     {
-        if(ptr_ + sizeof(T_) > end_)
+        c8 const ** pptr = &ptr_;
+        c8 const * tptr = beg_ + offset;
+        if(offset >= 0)  //abs read do not update pointer
+            pptr = &tptr;
+        c8 const * & ptr = *pptr;
+
+        if(ptr + sizeof(T_) > end_)
             throw DecaException("EOL REACHED");
 
-        T_ const value = *((T_ *)ptr_);
-        ptr_ += sizeof(T_);
+        T_ const value = *((T_ *)ptr);
+        ptr += sizeof(T_);
         return value;
     }
 
 
 
     template<typename T_>
-    ArrayRef<T_> reads(size_t count)
+    ArrayRef<T_> reads(size_t count, s64 offset=-1)
     {
-        if(ptr_ + sizeof(T_) * count > end_)
+        c8 const ** pptr = &ptr_;
+        c8 const * tptr = beg_ + offset;
+        if(offset >= 0)  //abs read do not update pointer
+            pptr = &tptr;
+        c8 const * & ptr = *pptr;
+
+        if(ptr + sizeof(T_) * count > end_)
             throw DecaException("EOL REACHED");
 
-        T_ * const ptr = ((T_ *)ptr_);
-        ptr_ += sizeof(T_) * count;
+        T_ * const ptr2 = (T_ *)ptr;
+        ptr += sizeof(T_) * count;
 
-        return ArrayRef<T_>(ptr, count);
+        return ArrayRef<T_>{ptr2,count};
     }
 
-    StringRef read_strz()
+    StringRef read_strz(s64 offset = -1)
     {
-        c8 const* start = ptr_;
+        c8 const ** pptr = &ptr_;
+        c8 const * tptr = beg_ + offset;
+        if(offset >= 0)  //abs read do not update pointer
+            pptr = &tptr;
+        c8 const * & ptr = *pptr;
 
-        for(;(ptr_ < end_) && (*ptr_ != 0); ++ptr_);
+        c8 const* start = ptr;
 
-        StringRef result(start, ptr_ - start);
+        for(;(ptr < end_) && (*ptr != 0); ++ptr);
 
-        if(ptr_ < end_)
-            ++ptr_;  //consume 0 at end of string
+        StringRef result(start, ptr - start);
+
+        if(ptr < end_)
+            ++ptr;  //consume 0 at end of string
 
         return result;
     }
@@ -166,15 +179,16 @@ public:
 
 };
 
+template<typename F_>
 class StorePos
 {
 public:
-    StorePos(DecaBufferFile & f)
+    StorePos(F_ & f)
     : f_(f)
     , offset_(f.pos_peek())
     {}
 
-    DecaBufferFile & f_;
+    F_ & f_;
     size_t offset_;
 
     ~StorePos()
@@ -206,4 +220,6 @@ u32 str_sz(std::string const&  v);
 c8 const* str_ptr(std::stringstream const&  v);
 u32 str_sz(std::stringstream const&  v);
 
+c8 const* str_ptr(StringRef const& v);
+u32 str_sz(StringRef const&  v);
 

@@ -294,17 +294,7 @@ public:
 // E := xml_r_element_begin xml_r_attr* E* xml_r_value? xml_r_element_close
 // E := xml_r_comment
 extern "C" {
-
     void xml_process(FileHnd hnd_input, FileHnd hnd_output);
-
-    FileHnd xml_r_open();
-    void xml_r_close(FileHnd const hnd);
-    void xml_r_element_begin(FileHnd const hnd, StringRef const &name);
-    void xml_r_element_end(FileHnd const hnd, StringRef const &name);
-    void xml_r_element_close(FileHnd const hnd, StringRef const &name);
-    void xml_r_attr(FileHnd const hnd, StringRef const &id, StringRef const &value);
-    void xml_r_value(FileHnd const hnd, StringRef const &value);
-    void xml_r_comment(FileHnd const hnd, StringRef const &value);
 
 }
 

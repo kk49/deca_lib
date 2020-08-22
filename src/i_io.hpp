@@ -131,6 +131,148 @@ private:
     s64 write_pos_;
 };
 
+template<typename T_>
+struct FileArrayRef {
+    typedef T_ ElementType;
+    FileHnd hnd_;
+    s64 offset_;
+    s64 cnt_;
+};
+
+struct FileStringRef {
+    FileHnd hnd_;
+    s64 offset_;
+    s64 cnt_;
+};
+
+class DecaBufferFile2
+{
+public:
+    DecaBufferFile2(FileHnd hnd)
+    : hnd_(hnd)
+    , file_size_(0)
+    , file_pos_(0)
+    {
+        file_size_ = file_size(hnd_);
+    }
+
+    FileHnd hnd_;
+    s64 file_size_;
+    s64 file_pos_;
+
+    size_t size() const { return file_size_; }
+
+    size_t pos_peek() const
+    {
+        return file_pos_;
+    }
+
+    void pos_seek(size_t offset)
+    {
+        file_pos_ = offset;
+    }
+
+    template<typename T_>
+    T_ read()
+    {
+        if(file_pos_ + sizeof(T_) > file_size_)
+            throw DecaException("EOL REACHED");
+
+        T_ value;
+        file_pos_ += file_read(hnd_, file_pos_, (c8*)&value, sizeof(T_));
+        return value;
+    }
+
+
+
+    template<typename T_>
+    FileArrayRef<T_> reads(size_t count)
+    {
+        if(file_pos_ + sizeof(T_) * count > file_size_)
+            throw DecaException("EOL REACHED");
+
+        s64 const old_pos = file_pos_;
+        file_pos_ += sizeof(T_) * count;
+
+        return FileArrayRef<T_>{
+            .hnd_ = hnd_,
+            .offset_ = old_pos,
+            .cnt_ = count
+        };
+    }
+
+    FileStringRef read_strz()
+    {
+        s64 const start_pos = file_pos_;
+        s64 const buffer_size = 64;
+        c8 buffer[buffer_size];
+
+        s32 count = 0;
+        bool run = true;
+        while(run)
+        {
+            s64 rcnt = file_read(hnd_, file_pos_, buffer, buffer_size);
+            if(rcnt <= 0)
+                break;
+
+            c8 const * const buffer_end = buffer + rcnt;
+
+            c8* pos;
+            for(pos = buffer; pos < buffer_end; ++pos)
+            {
+                if(*pos == 0)
+                {
+                    run = false;
+                    count += 1;
+                    break;
+                }
+            }
+            count += pos - buffer;
+        }
+
+        file_pos_ += count;
+
+        FileStringRef result{
+            .hnd_ = hnd_,
+            .offset_ = start_pos,
+            .cnt_ = count
+        };
+
+        return result;
+    }
+
+    FileStringRef read_strn(u32 size, bool const trim_last = false)
+    {
+        if(file_pos_ + sizeof(c8) * size > file_size_)
+            throw DecaException("EOL REACHED");
+
+        FileStringRef result{
+            .hnd_ = hnd_,
+            .offset_ = file_pos_,
+            .cnt_ = size
+        };
+
+        file_pos_ += size;
+        if(trim_last) --file_pos_;
+
+        return result;
+    }
+
+    template<typename OFFSET_, typename LENGTH_>
+    FileStringRef read_strol()
+    {
+        //TODO Add buffer end check
+        u32 const offset = read<OFFSET_>();
+        u32 const length = read<LENGTH_>();  // TODO Size may be needed for byte codes?
+
+        return FileStringRef{
+            .hnd_ = hnd_,
+            .offset_ = offset,
+            .cnt_ = length
+        };
+    }
+};
+
 extern std::ostream wasm_out;
 extern std::ostream wasm_err;
 extern std::istream wasm_in;

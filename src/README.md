@@ -119,3 +119,95 @@ hash_register(00000000deadbeef, 5265189, 0) == b''
 ../test/adf/savegame, value = 1, Time: 2.7698512077331543 = 0.0013284683227539062 + 0.15267133712768555 + 2.615851402282715
 
 ```
+
+# new file access
+## reference
+```
+krys@krys-desktop:~/prj/deca_lib/src$ python test_wasm_lib.py 
+file_open(stdout,rwb)
+file_size(0)
+file_open(stderr,rwb)
+file_size(1)
+file_open(stdin,rwb)
+file_size(2)
+wasm memory size = 268435456
+../test/rtpc/global_aesir.blo, value = 1, Time: 4.688530921936035 = 0.0006258487701416016 + 0.08438754081726074 + 4.603517532348633
+../test/rtpc/global_gui.blo, value = 1, Time: 0.0775299072265625 = 3.8623809814453125e-05 + 0.000652313232421875 + 0.07683897018432617
+../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.011308908462524414 = 4.315376281738281e-05 + 0.00035881996154785156 + 0.01090693473815918
+file_open(xml_in,)
+file_open(xml_out,)
+xml_process(3, 4)
+file_close(4)
+file_close(3)
+file_open(xml_in,)
+file_open(xml_out,)
+xml_process(5, 6)
+file_close(6)
+file_close(5)
+file_open(xml_in,)
+file_open(xml_out,)
+xml_process(7, 8)
+file_close(8)
+file_close(7)
+../test/adf/animal_population_0, value = 1, Time: 0.22817420959472656 = 2.0265579223632812e-05 + 0.009349822998046875 + 0.21880412101745605
+hash_register(00000000046acfce, 5265360, 33) == b'textures/dummies/dummy_white.ddsc'
+hash_register(000000001c3f3cf7, 5265402, 15) == b'Pistol_Sa_22_01'
+hash_register(00000000308f2f7c, 5265426, 9) == b'GeneralR2'
+hash_register(00000000764ca8d0, 5265444, 31) == b'textures/dummies/dummy_nrm.ddsc'
+hash_register(00000000812013bb, 5265484, 57) == b'models/hp_weapons/pistol_sa_22_01/pistol_sa_22_01_a.meshc'
+hash_register(0000000087db5283, 5265550, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_dif.ddsc'
+hash_register(00000000b0bd45f7, 5265626, 42) == b'textures/dummies/dummy_grey_alpha_dif.ddsc'
+hash_register(00000000bb565b5a, 5265677, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_nrm.ddsc'
+hash_register(00000000ceb44da8, 5265753, 31) == b'textures/dummies/dummy_mpm.ddsc'
+hash_register(00000000d2fd9902, 5265793, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_mpm.ddsc'
+hash_register(00000000deadbeef, 5265869, 0) == b''
+../test/adf/pistol_sa_22_01_a.modelc, value = 1, Time: 0.0007665157318115234 = 3.361701965332031e-05 + 0.00015354156494140625 + 0.0005793571472167969
+../test/adf/savegame, value = 1, Time: 2.958386182785034 = 0.0013806819915771484 + 0.17192769050598145 + 2.7850778102874756
+krys@krys-desktop:~/prj/deca_lib/src$ python test_wasm_lib.py 
+wasm memory size = 268435456
+../test/rtpc/global_aesir.blo, value = 1, Time: 4.654101371765137 = 0.0006096363067626953 + 0.08500528335571289 + 4.568486452102661
+../test/rtpc/global_gui.blo, value = 1, Time: 0.07743263244628906 = 3.910064697265625e-05 + 0.0006303787231445312 + 0.07676315307617188
+../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.010978460311889648 = 3.5762786865234375e-05 + 0.0002639293670654297 + 0.010678768157958984
+xml_process(3, 4)
+xml_process(5, 6)
+xml_process(7, 8)
+../test/adf/animal_population_0, value = 1, Time: 0.21946120262145996 = 1.621246337890625e-05 + 0.009126663208007812 + 0.21031832695007324
+hash_register(00000000046acfce, 5265360, 33) == b'textures/dummies/dummy_white.ddsc'
+hash_register(000000001c3f3cf7, 5265402, 15) == b'Pistol_Sa_22_01'
+hash_register(00000000308f2f7c, 5265426, 9) == b'GeneralR2'
+hash_register(00000000764ca8d0, 5265444, 31) == b'textures/dummies/dummy_nrm.ddsc'
+hash_register(00000000812013bb, 5265484, 57) == b'models/hp_weapons/pistol_sa_22_01/pistol_sa_22_01_a.meshc'
+hash_register(0000000087db5283, 5265550, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_dif.ddsc'
+hash_register(00000000b0bd45f7, 5265626, 42) == b'textures/dummies/dummy_grey_alpha_dif.ddsc'
+hash_register(00000000bb565b5a, 5265677, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_nrm.ddsc'
+hash_register(00000000ceb44da8, 5265753, 31) == b'textures/dummies/dummy_mpm.ddsc'
+hash_register(00000000d2fd9902, 5265793, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_mpm.ddsc'
+hash_register(00000000deadbeef, 5265869, 0) == b''
+../test/adf/pistol_sa_22_01_a.modelc, value = 1, Time: 0.0006728172302246094 = 3.3855438232421875e-05 + 0.00014734268188476562 + 0.0004916191101074219
+../test/adf/savegame, value = 1, Time: 2.917729616165161 = 0.0013778209686279297 + 0.15984177589416504 + 2.756510019302368
+```
+### refactor in prep for new file access
+```
+krys@krys-desktop:~/prj/deca_lib/src$ python test_wasm_lib.py 
+wasm memory size = 268435456
+../test/rtpc/global_aesir.blo, value = 1, Time: 4.702573776245117 = 0.0006198883056640625 + 0.08656835556030273 + 4.61538553237915
+../test/rtpc/global_gui.blo, value = 1, Time: 0.08048343658447266 = 4.0531158447265625e-05 + 0.0006372928619384766 + 0.07980561256408691
+../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.010854005813598633 = 3.504753112792969e-05 + 0.00024890899658203125 + 0.010570049285888672
+xml_process(3, 4)
+xml_process(5, 6)
+xml_process(7, 8)
+../test/adf/animal_population_0, value = 1, Time: 0.1989448070526123 = 1.430511474609375e-05 + 0.009181022644042969 + 0.18974947929382324
+hash_register(00000000046acfce, 5265376, 33) == b'textures/dummies/dummy_white.ddsc'
+hash_register(000000001c3f3cf7, 5265418, 15) == b'Pistol_Sa_22_01'
+hash_register(00000000308f2f7c, 5265442, 9) == b'GeneralR2'
+hash_register(00000000764ca8d0, 5265460, 31) == b'textures/dummies/dummy_nrm.ddsc'
+hash_register(00000000812013bb, 5265500, 57) == b'models/hp_weapons/pistol_sa_22_01/pistol_sa_22_01_a.meshc'
+hash_register(0000000087db5283, 5265566, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_dif.ddsc'
+hash_register(00000000b0bd45f7, 5265642, 42) == b'textures/dummies/dummy_grey_alpha_dif.ddsc'
+hash_register(00000000bb565b5a, 5265693, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_nrm.ddsc'
+hash_register(00000000ceb44da8, 5265769, 31) == b'textures/dummies/dummy_mpm.ddsc'
+hash_register(00000000d2fd9902, 5265809, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_mpm.ddsc'
+hash_register(00000000deadbeef, 5265885, 0) == b''
+../test/adf/pistol_sa_22_01_a.modelc, value = 1, Time: 0.0006687641143798828 = 3.314018249511719e-05 + 0.00014925003051757812 + 0.0004863739013671875
+../test/adf/savegame, value = 1, Time: 2.9384825229644775 = 0.001371145248413086 + 0.15947484970092773 + 2.7776365280151367
+```
