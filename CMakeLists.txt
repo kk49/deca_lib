@@ -1,15 +1,15 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
 PROJECT(deca_lib)
 
-SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_CXX_STANDARD 17)
 
 set(
         SOURCE_FILES
-        src/basedef.cpp
+        src/defs.cpp
         src/hashes.cpp
-        src/i_base.cpp
         src/i_io.cpp
         src/i_data_stack.cpp
+        src/i_xml_in.cpp
         src/ff/adf.cpp
         src/ff/rtpc.cpp
 )
@@ -23,15 +23,18 @@ SET(
         -v
         -O3
         --no-entry
-        --js-library ${PROJECT_SOURCE_DIR}/src/i_base.js
+        --js-library ${PROJECT_SOURCE_DIR}/src/i_io.js
         --js-library ${PROJECT_SOURCE_DIR}/src/i_data_stack.js
-        --js-library ${PROJECT_SOURCE_DIR}/src/i_xml.js
+        --js-library ${PROJECT_SOURCE_DIR}/src/i_xml_out.js
         --pre-js ${PROJECT_SOURCE_DIR}/src/i_data_stack_pre.js
         -s INITIAL_MEMORY=256MB
         -s MAXIMUM_MEMORY=1GB
 )
+#-O3
+#-g4
 #-s EXPORT_ALL=0
 #-s EXPORTED_FUNCTIONS="[]"
+#-s DISABLE_EXCEPTION_CATCHING=0
 
 function(JOIN VALUES GLUE OUTPUT)
     string (REGEX REPLACE "([^\\]|^);" "\\1${GLUE}" _TMP_STR "${VALUES}")

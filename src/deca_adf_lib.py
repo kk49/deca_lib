@@ -287,7 +287,7 @@ class DecaLibWasmStack(DecaLibWasm):
         # print(f'file_size({hnd})')
         if hnd in self.files_open:
             file = self.files_open.get(hnd)
-            if file is bytearray:
+            if isinstance(file, bytearray) or isinstance(file, bytes):
                 return len(file)
             elif isinstance(file, io.TextIOBase):
                 return 0
@@ -471,6 +471,7 @@ class DecaLibWasmStack(DecaLibWasm):
         self.adf_stack.append(value)
 
     def xml_w_element_begin(self, file_hnd, offset, sz):
+        # print(f'xml_w_element_begin({file_hnd}, {offset}, {sz})')
         value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
         value = bytes(value).decode('utf-8')
         if self.adf_stack:
@@ -480,6 +481,7 @@ class DecaLibWasmStack(DecaLibWasm):
         self.adf_stack.append(ele)
 
     def xml_w_element_end(self, file_hnd, offset, sz):
+        # print(f'xml_w_element_end({file_hnd}, {offset}, {sz})')
         value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
         value = bytes(value).decode('utf-8')
         # print('xml_w_element_end', file_hnd, value)
@@ -487,15 +489,18 @@ class DecaLibWasmStack(DecaLibWasm):
             self.adf_stack.pop()
 
     def xml_w_attr_set(self, file_hnd, id_offset, id_sz, value_offset, value_sz):
+        # print(f'xml_w_attr_set({file_hnd}, {id_offset}, {id_sz}, {value_offset}, {value_sz}))')
         id_raw = memoryview(self._instance.memory.buffer)[id_offset:id_offset + id_sz]
         id_str = bytes(id_raw).decode('utf-8')
         value = memoryview(self._instance.memory.buffer)[value_offset:value_offset + value_sz]
         value = bytes(value).decode('utf-8')
         if self.adf_stack:
             self.adf_stack[-1].set(id_str, value)
+        # print(f'xml_w_attr_set({file_hnd}, {id_str}, {value}, {len(self.adf_stack)}))')
 
     def xml_w_value_set(self, file_hnd, offset, sz):
         value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
         value = bytes(value).decode('utf-8')
+        # print(f'xml_w_value_set({file_hnd}, {offset}, {sz}, {value})')
         if self.adf_stack:
             self.adf_stack[-1].text = value

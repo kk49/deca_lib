@@ -1,5 +1,5 @@
-#include "../basedef.hpp"
-#include "../i_base.hpp"
+#include "../defs.hpp"
+#include "../i_io.hpp"
 #include "../i_data_stack.hpp"
 #include <emscripten.h>
 #include <iostream>
@@ -213,16 +213,16 @@ void read_instance_array(DecaBufferFile & f, std::map<u32, TypeDef> const & map_
 {
     switch(type_hash)
     {
-        case typedef_s8: array_push(f.reads<s8>(length)); break;
-        case typedef_u8: array_push(f.reads<u8>(length)); break;
-        case typedef_s16: array_push(f.reads<s16>(length)); break;
-        case typedef_u16: array_push(f.reads<u16>(length)); break;
-        case typedef_s32: array_push(f.reads<s32>(length)); break;
-        case typedef_u32: array_push(f.reads<u32>(length)); break;
-        case typedef_s64: array_push(f.reads<s64>(length)); break;
-        case typedef_u64: array_push(f.reads<u64>(length)); break;
-        case typedef_f32: array_push(f.reads<f32>(length)); break;
-        case typedef_f64: array_push(f.reads<f64>(length)); break;
+        case typedef_s8: { auto arr = f.reads<s8>(length); array_push(arr); } break;
+        case typedef_u8: { auto arr = f.reads<u8>(length); array_push(arr); } break;
+        case typedef_s16: { auto arr = f.reads<s16>(length); array_push(arr); } break;
+        case typedef_u16: { auto arr = f.reads<u16>(length); array_push(arr); } break;
+        case typedef_s32: { auto arr = f.reads<s32>(length); array_push(arr); } break;
+        case typedef_u32: { auto arr = f.reads<u32>(length); array_push(arr); } break;
+        case typedef_s64: { auto arr = f.reads<s64>(length); array_push(arr); } break;
+        case typedef_u64: { auto arr = f.reads<u64>(length); array_push(arr); } break;
+        case typedef_f32: { auto arr = f.reads<f32>(length); array_push(arr); } break;
+        case typedef_f64: { auto arr = f.reads<f64>(length); array_push(arr); } break;
         default:
             {
                 list_push();

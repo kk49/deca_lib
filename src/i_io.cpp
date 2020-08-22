@@ -1,4 +1,5 @@
 #include "i_io.hpp"
+
 #include <emscripten.h>
 #include <vector>
 
@@ -18,6 +19,10 @@ c8 *alloc_bin(u64 sz) {
 }
 
 }
+
+c8 const* str_ptr(FileStringRef & str) { return str.str_ptr(); }
+size_t str_sz(FileStringRef & str) { return str.str_sz(); }
+
 
 std::ostream wasm_out{new WasmStreamBuf("stdout")};
 std::ostream wasm_err{new WasmStreamBuf("stderr")};

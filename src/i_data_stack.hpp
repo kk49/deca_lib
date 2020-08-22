@@ -1,5 +1,5 @@
 #pragma once
-#include "basedef.hpp"
+#include "defs.hpp"
 #include <cstring>
 #include <vector>
 #include <map>
@@ -50,20 +50,24 @@ extern "C"
     extern void f64s_push(f64 const * ptr, u32 cnt);   // ... -> ... array[]
 }
 
-void array_push(ArrayRef<s8> const & ref);
-void array_push(ArrayRef<u8> const & ref);
-void array_push(ArrayRef<s16> const & ref);
-void array_push(ArrayRef<u16> const & ref);
-void array_push(ArrayRef<s32> const & ref);
-void array_push(ArrayRef<u32> const & ref);
-void array_push(ArrayRef<s64> const & ref);
-void array_push(ArrayRef<u64> const & ref);
-void array_push(ArrayRef<f32> const & ref);
-void array_push(ArrayRef<f64> const & ref);
+template<typename ET_> struct Func;
+template<> struct Func<s8> { static auto constexpr push_func = s8s_push; };
+template<> struct Func<u8> { static auto constexpr push_func = u8s_push; };
+template<> struct Func<s16> { static auto constexpr push_func = s16s_push; };
+template<> struct Func<u16> { static auto constexpr push_func = u16s_push; };
+template<> struct Func<s32> { static auto constexpr push_func = s32s_push; };
+template<> struct Func<u32> { static auto constexpr push_func = u32s_push; };
+template<> struct Func<s64> { static auto constexpr push_func = s64s_push; };
+template<> struct Func<u64> { static auto constexpr push_func = u64s_push; };
+template<> struct Func<f32> { static auto constexpr push_func = f32s_push; };
+template<> struct Func<f64> { static auto constexpr push_func = f64s_push; };
 
-void hash_register(u64 hash, StringRef const & ref);
-void str_push(c8 const * ptr);
-void str_push(std::string const & str);
-void str_push(StringRef const & str);
-void enum_push(u64 value, StringRef const & str);
 
+template<typename T_> void str_push(T_ const & str) { str_push(str_ptr(str), str_sz(str)); }
+template<typename T_> void str_push(T_ & str) { str_push(str_ptr(str), str_sz(str)); }
+template<typename T_> void enum_push(u64 value, T_ const & str) { enum_push(value, str_ptr(str), str_sz(str)); }
+template<typename T_> void enum_push(u64 value, T_ & str) { enum_push(value, str_ptr(str), str_sz(str)); }
+template<typename T_> void hash_register(u64 value, T_ const & str) { hash_register(value, str_ptr(str), str_sz(str)); }
+template<typename T_> void hash_register(u64 value, T_ & str) { hash_register(value, str_ptr(str), str_sz(str)); }
+
+template<typename T_> void array_push(T_ & arr) { Func<typename DetElementType<T_>::ElementType >::push_func(arr_ptr(arr), arr_cnt(arr)); }

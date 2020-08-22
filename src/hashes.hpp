@@ -1,5 +1,5 @@
 #pragma once
-#include "basedef.hpp"
+#include "defs.hpp"
 
 u32 hash32_func(u8 const * data, u32 len, u32 init_val=0) noexcept;
 u32 hash32_func(c8 const * data) noexcept;

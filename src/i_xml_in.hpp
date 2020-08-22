@@ -1,6 +1,5 @@
 #pragma once
-#include "basedef.hpp"
-#include "i_base.hpp"
+#include "defs.hpp"
 #include "i_io.hpp"
 #include <map>
 #include <list>

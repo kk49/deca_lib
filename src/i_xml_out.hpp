@@ -1,5 +1,5 @@
 #pragma once
-#include "basedef.hpp"
+#include "defs.hpp"
 #include "i_io.hpp"
 
 // imports
@@ -38,14 +38,14 @@ void xml_w_attr_set(FileHnd const hnd, T0_ const & id, T1_ const & value)
 }
 
 template<typename T_>
-void xml_w_value_set(FileHnd const hnd, T_ const & value)
+void xml_w_value_set(FileHnd const hnd, T_ & value)
 {
     xml_w_value_set(hnd, str_ptr(value), str_sz(value));
 }
 
 
 template<typename T_>
-void xml_w_comment(FileHnd const hnd, T_ const & value)
+void xml_w_comment(FileHnd const hnd, T_ & value)
 {
     xml_w_comment(hnd, str_ptr(value), str_sz(value));
 }

@@ -1,5 +1,5 @@
 #include "hashes.hpp"
-#include "i_base.hpp"
+#include "i_io.hpp"
 
 // Need to constrain U32 to only 32 bits using the & 0xffffffff
 // since Python has no native notion of integers limited to 32 bit

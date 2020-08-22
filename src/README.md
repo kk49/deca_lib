@@ -211,3 +211,28 @@ hash_register(00000000deadbeef, 5265885, 0) == b''
 ../test/adf/pistol_sa_22_01_a.modelc, value = 1, Time: 0.0006687641143798828 = 3.314018249511719e-05 + 0.00014925003051757812 + 0.0004863739013671875
 ../test/adf/savegame, value = 1, Time: 2.9384825229644775 = 0.001371145248413086 + 0.15947484970092773 + 2.7776365280151367
 ```
+
+### more prep
+```
+wasm memory size = 268435456
+Mem: ../test/rtpc/global_aesir.blo, value = 1, Time: 4.409419775009155 = 0.0006041526794433594 + 0.08687257766723633 + 4.321943044662476
+Mem: ../test/rtpc/global_gui.blo, value = 1, Time: 0.08058619499206543 = 3.814697265625e-05 + 0.0006194114685058594 + 0.07992863655090332
+Mem: ../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.01092982292175293 = 3.981590270996094e-05 + 0.00036144256591796875 + 0.010528564453125
+xml_process(3, 4)
+xml_process(5, 6)
+xml_process(7, 8)
+../test/adf/animal_population_0, value = 1, Time: 0.19135689735412598 = 2.2172927856445312e-05 + 0.009649515151977539 + 0.181685209274292
+hash_register(00000000046acfce, 5265392, 33) == b'textures/dummies/dummy_white.ddsc'
+hash_register(000000001c3f3cf7, 5265434, 15) == b'Pistol_Sa_22_01'
+hash_register(00000000308f2f7c, 5265458, 9) == b'GeneralR2'
+hash_register(00000000764ca8d0, 5265476, 31) == b'textures/dummies/dummy_nrm.ddsc'
+hash_register(00000000812013bb, 5265516, 57) == b'models/hp_weapons/pistol_sa_22_01/pistol_sa_22_01_a.meshc'
+hash_register(0000000087db5283, 5265582, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_dif.ddsc'
+hash_register(00000000b0bd45f7, 5265658, 42) == b'textures/dummies/dummy_grey_alpha_dif.ddsc'
+hash_register(00000000bb565b5a, 5265709, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_nrm.ddsc'
+hash_register(00000000ceb44da8, 5265785, 31) == b'textures/dummies/dummy_mpm.ddsc'
+hash_register(00000000d2fd9902, 5265825, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_mpm.ddsc'
+hash_register(00000000deadbeef, 5265901, 0) == b''
+../test/adf/pistol_sa_22_01_a.modelc, value = 1, Time: 0.0006766319274902344 = 3.218650817871094e-05 + 0.0001499652862548828 + 0.0004944801330566406
+../test/adf/savegame, value = 1, Time: 2.7572476863861084 = 0.0013082027435302734 + 0.1568291187286377 + 2.5991103649139404
+```
