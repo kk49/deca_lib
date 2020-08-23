@@ -33,37 +33,46 @@ def process_rtpc_to_xml_mem(fn, input_buffer):
     t0 = time.time()
 
     input_wasm_offset = lib.instance().exports.alloc_bin(input_sz)
+    lib.files_map['rtpc_out'] = bytearray()
 
     t1 = time.time()
 
     input_wasm = lib.instance().memory.uint8_view(input_wasm_offset)
     input_wasm[:input_sz] = input_buffer[:]
 
+    file_hnd_out = lib.file_open_local('rtpc_out', '')
+
     t2 = time.time()
 
-    value = lib.instance().exports.process_rtpc_mem(666, input_wasm_offset, input_sz)
+    value = lib.instance().exports.process_rtpc_mem(file_hnd_out, input_wasm_offset, input_sz)
+
+    lib.file_close(file_hnd_out)
 
     t3 = time.time()
 
     print(f'Mem: {fn}, value = {value}, Time: {t3-t0} = {t1-t0} + {t2-t1} + {t3-t2}\n')
 
+    fnn = fn + '.mem.xml'
+    rtpc_str = None
     if lib.adf_stack:
-        adf = lib.adf_stack.pop()
-        if isinstance(adf, list) or isinstance(adf, dict):
+        rtpc = lib.adf_stack.pop()
+        if isinstance(rtpc, list) or isinstance(rtpc, dict):
             pass
         else:
-            fnn = fn + '.mem.xml'
-            adf_str = tostring(adf)
-            with open(fnn, 'wb') as f:
-                f.write(adf_str)
-
-            adf_str = minidom.parseString(adf_str)
-            adf_str = adf_str.toprettyxml(indent=' ')
-            with open(fnn, 'w') as f:
-                f.write(adf_str)
-            test_xml.append(fnn)
+            rtpc_str = tostring(rtpc)
     else:
-        adf = None
+        rtpc_str = lib.files_map['rtpc_out']
+
+    if rtpc_str is not None:
+        with open(fnn, 'wb') as f:
+            f.write(rtpc_str)
+
+        rtpc_str = minidom.parseString(rtpc_str)
+        rtpc_str = rtpc_str.toprettyxml(indent=' ')
+        with open(fnn, 'w') as f:
+            f.write(rtpc_str)
+
+        test_xml.append(fnn)
 
 
 def process_rtpc_to_xml_file(fn, input_buffer):
@@ -76,42 +85,50 @@ def process_rtpc_to_xml_file(fn, input_buffer):
     t0 = time.time()
 
     lib.files_map['rtpc_in'] = input_buffer
+    lib.files_map['rtpc_out'] = bytearray()
 
     t1 = time.time()
 
     file_hnd_in = lib.file_open_local('rtpc_in', '')
+    file_hnd_out = lib.file_open_local('rtpc_out', '')
 
     t2 = time.time()
 
-    value = lib.instance().exports.process_rtpc_file(666, file_hnd_in)
+    value = lib.instance().exports.process_rtpc_file(file_hnd_out, file_hnd_in)
 
+    lib.file_close(file_hnd_out)
     lib.file_close(file_hnd_in)
 
     t3 = time.time()
 
     print(f'File: {fn}, value = {value}, Time: {t3-t0} = {t1-t0} + {t2-t1} + {t3-t2}\n')
 
+    fnn = fn + '.file.xml'
+    rtpc_str = None
     if lib.adf_stack:
-        adf = lib.adf_stack.pop()
-        if isinstance(adf, list) or isinstance(adf, dict):
+        rtpc = lib.adf_stack.pop()
+        if isinstance(rtpc, list) or isinstance(rtpc, dict):
             pass
         else:
-            fnn = fn + '.file.xml'
-            adf_str = tostring(adf)
-            with open(fnn, 'wb') as f:
-                f.write(adf_str)
-
-            adf_str = minidom.parseString(adf_str)
-            adf_str = adf_str.toprettyxml(indent=' ')
-            with open(fnn, 'w') as f:
-                f.write(adf_str)
-
-            test_xml.append(fnn)
+            rtpc_str = tostring(rtpc)
     else:
-        adf = None
+        rtpc_str = lib.files_map['rtpc_out']
+
+    if rtpc_str is not None:
+        with open(fnn, 'wb') as f:
+            f.write(rtpc_str)
+
+        rtpc_str = minidom.parseString(rtpc_str)
+        rtpc_str = rtpc_str.toprettyxml(indent=' ')
+        with open(fnn, 'w') as f:
+            f.write(rtpc_str)
+
+        test_xml.append(fnn)
 
 
 def main():
+    lib.timing_test_run()
+
     for skip_bytes, fn in test_rtpc:
         with open(fn, 'rb') as f:
             input_buffer = f.read()

@@ -12,6 +12,7 @@ set(
         src/i_xml_in.cpp
         src/ff/adf.cpp
         src/ff/rtpc.cpp
+        src/testing.cpp
 )
 
 ADD_EXECUTABLE(deca_lib ${SOURCE_FILES})
@@ -26,6 +27,7 @@ SET(
         --js-library ${PROJECT_SOURCE_DIR}/src/i_io.js
         --js-library ${PROJECT_SOURCE_DIR}/src/i_data_stack.js
         --js-library ${PROJECT_SOURCE_DIR}/src/i_xml_out.js
+        --js-library ${PROJECT_SOURCE_DIR}/src/testing.js
         --pre-js ${PROJECT_SOURCE_DIR}/src/i_data_stack_pre.js
         -s INITIAL_MEMORY=256MB
         -s MAXIMUM_MEMORY=1GB

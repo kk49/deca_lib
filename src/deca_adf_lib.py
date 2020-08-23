@@ -2,6 +2,7 @@ import wasmer
 import numpy as np
 import sys
 import io
+import time
 import os
 from collections import defaultdict
 from xml.etree.ElementTree import Element, SubElement, Comment, tostring
@@ -64,9 +65,12 @@ class DecaLibWasm:
             'f64s_push': self.f64s_push,
 
             'xml_w_element_begin': self.xml_w_element_begin,
+            'xml_w_element_close': self.xml_w_element_close,
             'xml_w_element_end': self.xml_w_element_end,
             'xml_w_attr_set': self.xml_w_attr_set,
             'xml_w_value_set': self.xml_w_value_set,
+
+            'timing_test': self.timing_test,
 
         }
 
@@ -95,6 +99,26 @@ class DecaLibWasm:
 
     def instance(self):
         return self._instance
+
+    def timing_test_run(self):
+        self.timing_idx = 0
+        self.timing_data_len = 1024
+        self.timing_data = [0.0] * self.timing_data_len
+
+        self._instance.exports.timing_test_run()
+
+        dts = []
+        for i in range(len(self.timing_data)):
+            dt = self.timing_data[(i+1) % len(self.timing_data)] - self.timing_data[i]
+            if dt > 0:
+                dts.append(dt)
+
+        print(f'timing: min: {np.min(dts)}, max: {np.max(dts)}, mean: {np.nanmean(dts)}, std: {np.std(dts)}\n')
+
+    def timing_test(self, v):
+        self.timing_data[self.timing_idx] = time.time()
+        self.timing_idx = (self.timing_idx + 1) % self.timing_data_len
+        return 0
 
     def file_open(self, path_ptr, path_sz, mode_ptr, mode_sz):
         pass
@@ -312,7 +336,7 @@ class DecaLibWasmStack(DecaLibWasm):
 
         if hnd in self.files_open:
             file = self.files_open[hnd]
-            if file is bytearray or file is bytes:
+            if isinstance(file, bytearray):
                 if pos > len(file) or pos < 0:
                     return -1
 
@@ -481,10 +505,17 @@ class DecaLibWasmStack(DecaLibWasm):
         self.adf_stack.append(ele)
 
     def xml_w_element_end(self, file_hnd, offset, sz):
+        # # print(f'xml_w_element_end({file_hnd}, {offset}, {sz})')
+        # value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
+        # value = bytes(value).decode('utf-8')
+        # # print('xml_w_element_end', file_hnd, value)
+        pass
+
+    def xml_w_element_close(self, file_hnd, offset, sz):
         # print(f'xml_w_element_end({file_hnd}, {offset}, {sz})')
         value = memoryview(self._instance.memory.buffer)[offset:offset + sz]
         value = bytes(value).decode('utf-8')
-        # print('xml_w_element_end', file_hnd, value)
+        # print('xml_w_element_close', file_hnd, value)
         if len(self.adf_stack) > 1:
             self.adf_stack.pop()
 

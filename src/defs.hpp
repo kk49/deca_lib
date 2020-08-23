@@ -96,6 +96,9 @@ public:
 };
 
 
+c8 const * to_string(c8 const * str);
+std::string const & to_string(std::string const & str);
+std::string to_string(std::stringstream const & ss);
 std::string to_string(StringRef const & ref);
 
 template<typename T_>
@@ -129,4 +132,3 @@ size_t str_sz(StringRef const& str);
 
 template <typename TE_> TE_ const* arr_ptr(ArrayRef<TE_> const& arr) { return arr.ptr_; }
 template <typename TE_> size_t arr_cnt(ArrayRef<TE_> const& arr) { return arr.cnt_; }
-

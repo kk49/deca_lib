@@ -9,6 +9,11 @@ mergeInto(LibraryManager.library, {
         const str = new TextDecoder("utf-8").decode(str_raw)
         console.log('xml_w_element_end:', str);
     },
+    xml_w_element_close: function(file_hnd, offset, sz) {
+        const str_raw = new Uint8Array(Module.HEAPU8.buffer, offset, sz);
+        const str = new TextDecoder("utf-8").decode(str_raw)
+        console.log('xml_w_element_close:', str);
+    },
 
     xml_w_value_set: function(file_hnd, offset, sz) {
         const str_raw = new Uint8Array(Module.HEAPU8.buffer, offset, sz);

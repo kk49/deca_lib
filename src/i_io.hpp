@@ -92,7 +92,7 @@ struct FileStringRef {
     s64 offset_;
     s64 cnt_;
 
-    std::vector<ElementType> buffer_;
+    std::string buffer_;
 
     void prep_buffer()
     {
@@ -122,6 +122,8 @@ struct FileStringRef {
 
 c8 const* str_ptr(FileStringRef & str);
 size_t str_sz(FileStringRef & str);
+
+std::string to_string(FileStringRef & str);
 
 template <typename TE_> TE_ const* arr_ptr(FileArrayRef<TE_> & arr) { return arr.arr_ptr(); }
 template <typename TE_> size_t arr_cnt(FileArrayRef<TE_> & arr) { return arr.arr_cnt(); }
@@ -444,20 +446,32 @@ public:
 };
 
 struct WasmStreamBuf
-        : public std::streambuf
+: public std::streambuf
 {
-    WasmStreamBuf(std::string const& path)
-            : hnd_(-1)
-            , read_pos_(0)
-            , write_pos_(0)
+public:
+    WasmStreamBuf(std::string const& path, bool auto_close = true)
+    : hnd_(-1)
+    , auto_close_(auto_close)
+    , read_pos_(0)
+    , write_pos_(0)
     {
         hnd_ = file_open(path, "rwb");
         file_size_ = file_size(hnd_);
     }
 
+    WasmStreamBuf(FileHnd hnd)
+    : hnd_(hnd)
+    , auto_close_(false)
+    , read_pos_(0)
+    , write_pos_(0)
+    {
+        file_size_ = file_size(hnd_);
+    }
+
     ~WasmStreamBuf()
     {
-
+        if(auto_close_ && hnd_ >= 0)
+            file_close(hnd_);
     }
 
     WasmStreamBuf(WasmStreamBuf const&) = delete;
@@ -543,6 +557,7 @@ public:
 
 private:
     FileHnd hnd_;
+    bool auto_close_;
     s64 file_size_;
     s64 read_pos_;
     s64 write_pos_;

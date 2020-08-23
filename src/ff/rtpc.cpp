@@ -429,20 +429,20 @@ namespace Rtpc {
     template<> struct XmlSerializeType<u8> { typedef u32 Type; };
     template<> struct XmlSerializeType<s8> { typedef s32 Type; };
 
-    template<typename File_>
+    template<typename File_, typename Xml_>
     class VisitorXml
     : public Visitor<Container, Node, Property, File_>
     {
     public:
         typedef Visitor<Container, Node, Property, File_> VisitorBase;
-        VisitorXml(FileHnd file_hnd)
-        : file_hnd_(file_hnd)
+        VisitorXml(Xml_ const& xml)
+        : xml_(xml)
         , container_()
         , node_stack_()
         , working_property_()
         {}
 
-        FileHnd file_hnd_;
+        Xml_ xml_;
         Container container_;
         Property working_property_;
 
@@ -457,9 +457,10 @@ namespace Rtpc {
         template<typename T_>
         void visit_prop_data(typename VisitorBase::FileType & f, size_t index, Property &prop, s64 n, s64 offset)
         {
-            xml_w_element_begin(file_hnd_, "value");
-            xml_w_attr_set(file_hnd_, "id", std::stringstream() << "0x" << to_hex(prop.name_hash_, 8));
-            xml_w_attr_set(file_hnd_, "type", to_string(prop.type_));
+            xml_.w_element_begin("value");
+            xml_.w_attr_set("id", std::stringstream() << "0x" << to_hex(prop.name_hash_, 8));
+            xml_.w_attr_set("type", to_string(prop.type_));
+            xml_.w_element_end("value");
 
             auto data = f.template reads<T_>(n, offset);
             auto ptr = arr_ptr(data);
@@ -473,18 +474,19 @@ namespace Rtpc {
                 ss << (typename XmlSerializeType<T_>::Type)*ptr;
             }
             auto value = ss.str();
-            xml_w_value_set(file_hnd_, value);
+            xml_.w_value_set(value);
 
-            xml_w_element_end(file_hnd_, "value");
+            xml_.w_element_close("value");
         }
 
         void visit_prop_data_strz(typename VisitorBase::FileType & f, size_t index, Property &prop, s64 offset) override {
-            xml_w_element_begin(file_hnd_, "value");
-            xml_w_attr_set(file_hnd_, "id", "0x" + to_hex(prop.name_hash_, 8));
-            xml_w_attr_set(file_hnd_, "type", to_string(prop.type_));
+            xml_.w_element_begin("value");
+            xml_.w_attr_set("id", "0x" + to_hex(prop.name_hash_, 8));
+            xml_.w_attr_set("type", to_string(prop.type_));
+            xml_.w_element_end("value");
             auto value = f.read_strz(offset);
-            xml_w_value_set(file_hnd_, value);
-            xml_w_element_end(file_hnd_, "value");
+            xml_.w_value_set(value);
+            xml_.w_element_close("value");
         }
 
         void visit_prop_data_u8(typename VisitorBase::FileType & f, size_t index, Property &prop, s64 n, s64 offset) override {
@@ -504,12 +506,13 @@ namespace Rtpc {
         }
 
         void visit_node_begin(typename VisitorBase::FileType & f, size_t index, Node &node) override {
-            xml_w_element_begin(file_hnd_, "object");
-            xml_w_attr_set(file_hnd_, "id", "0x" + to_hex(node.name_hash_, 8));
+            xml_.w_element_begin("object");
+            xml_.w_attr_set("id", "0x" + to_hex(node.name_hash_, 8));
+            xml_.w_element_end("object");
             node_push();
         }
         void visit_node_end(typename VisitorBase::FileType & f, size_t index, Node &node) override {
-            xml_w_element_end(file_hnd_, "object");
+            xml_.w_element_close("object");
             node_pop();
         }
 
@@ -519,13 +522,14 @@ namespace Rtpc {
         void visit_node_children_end(typename VisitorBase::FileType & f, size_t index, Node &node) override {}
 
         void visit_container_begin(typename VisitorBase::FileType & f, Container &container) override {
-            xml_w_element_begin(file_hnd_, "container");
-            xml_w_attr_set(file_hnd_, "format", "deca.rtpc");
+            xml_.w_element_begin("container");
+            xml_.w_attr_set("format", "deca.rtpc");
+            xml_.w_element_end("container");
             node_push();
         }
 
         void visit_container_end(typename VisitorBase::FileType & f, Container &container) override {
-            xml_w_element_end(file_hnd_, "container");
+            xml_.w_element_close("container");
             node_pop();
         }
 
@@ -647,7 +651,14 @@ bool process_rtpc_mem(FileHnd file_out_hnd, c8 const* buffer, u64 buffer_sz)
     try {
         DecaBufferFile f(buffer, buffer + buffer_sz);
 
-        Rtpc::VisitorXml<DecaBufferFile> visitor(file_out_hnd);
+//        WasmStreamBuf file_out_buf(file_out_hnd);
+//        std::ostream file_out(&file_out_buf);
+//        XmlWriterFile writer{&file_out};
+//        Rtpc::VisitorXml<DecaBufferFile,XmlWriterFile> visitor(writer);
+
+        XmlWriterExternal writer{file_out_hnd};
+        Rtpc::VisitorXml<DecaBufferFile,XmlWriterExternal> visitor(writer);
+        
 //    Rtpc::VisitorDataStack visitor{};
 //    Rtpc::VisitorStorage visitor{};
 
@@ -669,7 +680,14 @@ bool process_rtpc_file(FileHnd file_out_hnd, FileHnd file_in_hnd)
     try {
         DecaBufferFile2 f(file_in_hnd);
 
-        Rtpc::VisitorXml<DecaBufferFile2> visitor(file_out_hnd);
+//        WasmStreamBuf file_out_buf(file_out_hnd);
+//        std::ostream file_out(&file_out_buf);
+//        XmlWriterFile writer{&file_out};
+//        Rtpc::VisitorXml<DecaBufferFile2,XmlWriterFile> visitor(writer);
+
+        XmlWriterExternal writer{file_out_hnd};
+        Rtpc::VisitorXml<DecaBufferFile2,XmlWriterExternal> visitor(writer);
+
 //    Rtpc::VisitorDataStack visitor{};
 //    Rtpc::VisitorStorage visitor{};
 
