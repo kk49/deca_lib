@@ -1,0 +1,70 @@
+wasm memory size = 268435456
+timing: min: 7.152557373046875e-07, max: 1.4066696166992188e-05, mean: 1.2084069722791804e-06, std: 8.524321680812694e-07
+
+process_rtpc_to_xml_mem ../test/rtpc/abandoned_foa_facility_acoustics.blo
+mem => call: ../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.010834455490112305 = 2.4557113647460938e-05 + 0.0002334117889404297 + 0.010576486587524414
+mem => file: ../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.03342032432556152 = 2.956390380859375e-05 + 0.0002338886260986328 + 0.0331568717956543
+file => call: ../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.01797938346862793 = 3.0040740966796875e-05 + 0.0002422332763671875 + 0.017707109451293945
+file => file: ../test/rtpc/abandoned_foa_facility_acoustics.blo, value = 1, Time: 0.041274309158325195 = 1.52587890625e-05 + 0.000240325927734375 + 0.04101872444152832
+
+process_rtpc_to_xml_mem ../test/rtpc/global_gui.blo
+mem => call: ../test/rtpc/global_gui.blo, value = 1, Time: 0.034216880798339844 = 4.124641418457031e-05 + 0.0006034374237060547 + 0.03357219696044922
+mem => file: ../test/rtpc/global_gui.blo, value = 1, Time: 0.10162544250488281 = 3.5762786865234375e-05 + 0.0006403923034667969 + 0.10094928741455078
+file => call: ../test/rtpc/global_gui.blo, value = 1, Time: 0.056325435638427734 = 4.363059997558594e-05 + 0.0006496906280517578 + 0.05563211441040039
+file => file: ../test/rtpc/global_gui.blo, value = 1, Time: 0.13149189949035645 = 3.647804260253906e-05 + 0.0006225109100341797 + 0.13083291053771973
+
+process_rtpc_to_xml_mem ../test/rtpc/global_aesir.blo
+mem => call: ../test/rtpc/global_aesir.blo, value = 1, Time: 4.52345085144043 = 0.0006203651428222656 + 0.0804297924041748 + 4.442400693893433
+mem => file: ../test/rtpc/global_aesir.blo, value = 1, Time: 13.253123044967651 = 4.1961669921875e-05 + 0.06713604927062988 + 13.1859450340271
+file => call: ../test/rtpc/global_aesir.blo, value = 1, Time: 8.086021423339844 = 5.4836273193359375e-05 + 0.06840348243713379 + 8.017563104629517
+file => file: ../test/rtpc/global_aesir.blo, value = 1, Time: 16.337717533111572 = 4.267692565917969e-05 + 0.06355738639831543 + 16.274117469787598
+
+process_rtpc_to_xml_mem ../test/rtpc/island01_n035.blo
+mem => call: ../test/rtpc/island01_n035.blo, value = 1, Time: 19.094552993774414 = 0.002364635467529297 + 0.2693750858306885 + 18.822813272476196
+mem => file: ../test/rtpc/island01_n035.blo, value = 1, Time: 54.812644481658936 = 4.863739013671875e-05 + 0.26209521293640137 + 54.5505006313324
+file => call: ../test/rtpc/island01_n035.blo, value = 1, Time: 29.430155277252197 = 6.794929504394531e-05 + 0.2660377025604248 + 29.16404962539673
+file => file: ../test/rtpc/island01_n035.blo, value = 1, Time: 65.23638272285461 = 4.9114227294921875e-05 + 0.2599937915802002 + 64.97633981704712
+
+process_rtpc_to_xml_mem ../test/rtpc/northcoast_town_hagaboda_west.blo
+mem => call: ../test/rtpc/northcoast_town_hagaboda_west.blo, value = 1, Time: 23.383493423461914 = 0.0036191940307617188 + 0.3408656120300293 + 23.039008617401123
+mem => file: ../test/rtpc/northcoast_town_hagaboda_west.blo, value = 1, Time: 71.62072920799255 = 5.173683166503906e-05 + 0.33800816535949707 + 71.28266930580139
+file => call: ../test/rtpc/northcoast_town_hagaboda_west.blo, value = 1, Time: 38.177544355392456 = 0.0070421695709228516 + 0.3499114513397217 + 37.82059073448181
+file => file: ../test/rtpc/northcoast_town_hagaboda_west.blo, value = 1, Time: 86.09515404701233 = 5.0067901611328125e-05 + 0.33803462982177734 + 85.75706934928894
+
+xml_process(43, 44)
+xml_process(45, 46)
+xml_process(47, 48)
+xml_process(49, 50)
+xml_process(51, 52)
+xml_process(53, 54)
+xml_process(55, 56)
+xml_process(57, 58)
+xml_process(59, 60)
+xml_process(61, 62)
+xml_process(63, 64)
+xml_process(65, 66)
+xml_process(67, 68)
+xml_process(69, 70)
+xml_process(71, 72)
+xml_process(73, 74)
+xml_process(75, 76)
+xml_process(77, 78)
+xml_process(79, 80)
+xml_process(81, 82)
+../test/adf/animal_population_0, value = 1, Time: 0.17928314208984375 = 1.52587890625e-05 + 0.008666753768920898 + 0.17060112953186035
+
+hash_register(00000000046acfce, 12451168, 33) == b'textures/dummies/dummy_white.ddsc'
+hash_register(000000001c3f3cf7, 12451210, 15) == b'Pistol_Sa_22_01'
+hash_register(00000000308f2f7c, 12451234, 9) == b'GeneralR2'
+hash_register(00000000764ca8d0, 12451252, 31) == b'textures/dummies/dummy_nrm.ddsc'
+hash_register(00000000812013bb, 12451292, 57) == b'models/hp_weapons/pistol_sa_22_01/pistol_sa_22_01_a.meshc'
+hash_register(0000000087db5283, 12451358, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_dif.ddsc'
+hash_register(00000000b0bd45f7, 12451434, 42) == b'textures/dummies/dummy_grey_alpha_dif.ddsc'
+hash_register(00000000bb565b5a, 12451485, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_nrm.ddsc'
+hash_register(00000000ceb44da8, 12451561, 31) == b'textures/dummies/dummy_mpm.ddsc'
+hash_register(00000000d2fd9902, 12451601, 67) == b'models/hp_weapons/pistol_sa_22_01/textures/handgun_22sa_01_mpm.ddsc'
+hash_register(00000000deadbeef, 12451677, 0) == b''
+../test/adf/pistol_sa_22_01_a.modelc, value = 1, Time: 0.0005614757537841797 = 3.337860107421875e-05 + 0.00013947486877441406 + 0.0003886222839355469
+
+../test/adf/savegame, value = 1, Time: 2.530320644378662 = 3.4809112548828125e-05 + 0.1414492130279541 + 2.388836622238159
+
