@@ -8,7 +8,7 @@
 #include <iostream>
 #include <list>
 
-typedef DecaBufferFile2 RtpcFileType;
+typedef DecaFSFile RtpcFileType;
 
 namespace Rtpc {
     enum PropType : u8 {
@@ -646,21 +646,12 @@ namespace Rtpc {
 extern "C" {
 
 EMSCRIPTEN_KEEPALIVE
-bool process_rtpc_mem(FileHnd file_out_hnd, c8 const* buffer, u64 buffer_sz)
+bool process_rtpc_out_call_in_mem(FileHnd file_out_hnd, c8 const* buffer, u64 buffer_sz)
 {
     try {
         DecaBufferFile f(buffer, buffer + buffer_sz);
-
-//        WasmStreamBuf file_out_buf(file_out_hnd);
-//        std::ostream file_out(&file_out_buf);
-//        XmlWriterFile writer{&file_out};
-//        Rtpc::VisitorXml<DecaBufferFile,XmlWriterFile> visitor(writer);
-
         XmlWriterExternal writer{file_out_hnd};
         Rtpc::VisitorXml<DecaBufferFile,XmlWriterExternal> visitor(writer);
-        
-//    Rtpc::VisitorDataStack visitor{};
-//    Rtpc::VisitorStorage visitor{};
 
         if(!Rtpc::file_deserialize(f, visitor))
             return false;
@@ -675,21 +666,59 @@ bool process_rtpc_mem(FileHnd file_out_hnd, c8 const* buffer, u64 buffer_sz)
 }
 
 EMSCRIPTEN_KEEPALIVE
-bool process_rtpc_file(FileHnd file_out_hnd, FileHnd file_in_hnd)
+bool process_rtpc_out_file_in_mem(FileHnd file_out_hnd, c8 const* buffer, u64 buffer_sz)
 {
     try {
-        DecaBufferFile2 f(file_in_hnd);
+        DecaBufferFile f(buffer, buffer + buffer_sz);
 
-//        WasmStreamBuf file_out_buf(file_out_hnd);
-//        std::ostream file_out(&file_out_buf);
-//        XmlWriterFile writer{&file_out};
-//        Rtpc::VisitorXml<DecaBufferFile2,XmlWriterFile> visitor(writer);
+        WasmStreamBuf file_out_buf(file_out_hnd);
+        std::ostream file_out(&file_out_buf);
+        XmlWriterFile writer{&file_out};
+        Rtpc::VisitorXml<DecaBufferFile,XmlWriterFile> visitor(writer);
+
+        if(!Rtpc::file_deserialize(f, visitor))
+            return false;
+
+        return true;
+    }
+    catch(DecaException const & E)
+    {
+        db_error(E.msg_);
+        return false;
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool process_rtpc_out_call_in_file(FileHnd file_out_hnd, FileHnd file_in_hnd)
+{
+    try {
+        DecaFSFile f(file_in_hnd);
 
         XmlWriterExternal writer{file_out_hnd};
-        Rtpc::VisitorXml<DecaBufferFile2,XmlWriterExternal> visitor(writer);
+        Rtpc::VisitorXml<DecaFSFile,XmlWriterExternal> visitor(writer);
 
-//    Rtpc::VisitorDataStack visitor{};
-//    Rtpc::VisitorStorage visitor{};
+        if(!Rtpc::file_deserialize(f, visitor))
+            return false;
+
+        return true;
+    }
+    catch(DecaException const & E)
+    {
+        db_error(E.msg_);
+        return false;
+    }
+}
+
+EMSCRIPTEN_KEEPALIVE
+bool process_rtpc_out_file_in_file(FileHnd file_out_hnd, FileHnd file_in_hnd)
+{
+    try {
+        DecaFSFile f(file_in_hnd);
+
+        WasmStreamBuf file_out_buf(file_out_hnd);
+        std::ostream file_out(&file_out_buf);
+        XmlWriterFile writer{&file_out};
+        Rtpc::VisitorXml<DecaFSFile,XmlWriterFile> visitor(writer);
 
         if(!Rtpc::file_deserialize(f, visitor))
             return false;

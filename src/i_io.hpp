@@ -254,10 +254,10 @@ public:
 
 };
 
-class DecaBufferFile2
+class DecaFSFile
 {
 public:
-    DecaBufferFile2(FileHnd hnd)
+    explicit DecaFSFile(FileHnd hnd)
     : hnd_(hnd)
     , file_size_(0)
     , file_pos_(0)
@@ -285,7 +285,7 @@ public:
     T_ read(s64 offset = -1)
     {
 //        db_print(std::stringstream()
-//            << "DecaBufferFile2::read"
+//            << "DecaFSFile::read"
 //            << ", " << file_pos_ << "/" << file_size_
 //            << ", " << offset
 //            << ", " << sizeof(T_)
@@ -297,7 +297,7 @@ public:
         s64 & fp = *pfp;
 
         if(fp + sizeof(T_) > file_size_)
-            db_exception(std::stringstream() << "DecaBufferFile2::read: EOL REACHED: " << fp << "/" << file_size_ << ", " << sizeof(T_));
+            db_exception(std::stringstream() << "DecaFSFile::read: EOL REACHED: " << fp << "/" << file_size_ << ", " << sizeof(T_));
 
         T_ value;
         fp += file_read(hnd_, fp, (c8*)&value, sizeof(T_));
@@ -310,7 +310,7 @@ public:
     FileArrayRef<T_> reads(s64 count, s64 offset=-1)
     {
 //        db_print(std::stringstream()
-//            << "DecaBufferFile2::reads"
+//            << "DecaFSFile::reads"
 //            << ", " << file_pos_ << "/" << file_size_
 //            << ", " << offset
 //            << ", " << count
@@ -329,7 +329,7 @@ public:
         }
 
         if(fp + sizeof(T_) * count > file_size_)
-            db_exception(std::stringstream() << "DecaBufferFile2::reads: EOL REACHED: " << fp << "/" << file_size_ << ", " << count);
+            db_exception(std::stringstream() << "DecaFSFile::reads: EOL REACHED: " << fp << "/" << file_size_ << ", " << count);
 
         s64 const old_pos = fp;
         fp += sizeof(T_) * count;
@@ -344,7 +344,7 @@ public:
     FileStringRef read_strz(s64 offset = -1)
     {
 //        db_print(std::stringstream()
-//            << "DecaBufferFile2::read_strz"
+//            << "DecaFSFile::read_strz"
 //            << ", " << file_pos_ << "/" << file_size_
 //            << ", " << offset
 //            << ", " << sizeof(c8)
@@ -431,7 +431,7 @@ template<typename F_>
 class StorePos
 {
 public:
-    StorePos(F_ & f)
+    explicit StorePos(F_ & f)
             : f_(f)
             , offset_(f.pos_peek())
     {}
@@ -449,7 +449,7 @@ struct WasmStreamBuf
 : public std::streambuf
 {
 public:
-    WasmStreamBuf(std::string const& path, bool auto_close = true)
+    explicit WasmStreamBuf(std::string const& path, bool auto_close = true)
     : hnd_(-1)
     , auto_close_(auto_close)
     , read_pos_(0)
@@ -459,7 +459,7 @@ public:
         file_size_ = file_size(hnd_);
     }
 
-    WasmStreamBuf(FileHnd hnd)
+    explicit WasmStreamBuf(FileHnd hnd)
     : hnd_(hnd)
     , auto_close_(false)
     , read_pos_(0)
@@ -468,7 +468,7 @@ public:
         file_size_ = file_size(hnd_);
     }
 
-    ~WasmStreamBuf()
+    ~WasmStreamBuf() override
     {
         if(auto_close_ && hnd_ >= 0)
             file_close(hnd_);
